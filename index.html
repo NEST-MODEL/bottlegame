@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Банка Слов — Игра</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    color: #fff;
+    overflow-x: hidden;
+  }
+  .screen { display: none; min-height: 100vh; padding: 20px; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+  /* === СТАРТОВЫЙ ЭКРАН === */
+  #startScreen { justify-content: center; }
+  .title {
+    font-size: 3.5rem; font-weight: 900;
+    background: linear-gradient(90deg, #e94560, #ff6b6b, #feca57);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    text-align: center; margin-bottom: 10px; text-shadow: none;
+  }
+  .subtitle { font-size: 1.2rem; color: #a0a0a0; margin-bottom: 40px; text-align: center; }
+  .card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 500px;
+    width: 100%;
+    backdrop-filter: blur(10px);
+  }
+  .input-group { margin-bottom: 20px; }
+  .input-group label { display: block; margin-bottom: 8px; color: #ccc; font-weight: 700; }
+  .input-group input, .input-group select {
+    width: 100%; padding: 12px 16px;
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 12px; background: rgba(0,0,0,0.3);
+    color: #fff; font-size: 1rem; outline: none; transition: 0.3s;
+  }
+  .input-group input:focus, .input-group select:focus { border-color: #e94560; }
+  .btn {
+    width: 100%; padding: 14px; border: none; border-radius: 12px;
+    font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.3s;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .btn-primary {
+    background: linear-gradient(90deg, #e94560, #ff6b6b);
+    color: #fff; box-shadow: 0 4px 20px rgba(233,69,96,0.4);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(233,69,96,0.6); }
+  .btn-secondary {
+    background: rgba(255,255,255,0.1); color: #fff; margin-top: 10px;
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+  .players-list { margin: 15px 0; }
+  .player-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(233,69,96,0.2); border: 1px solid rgba(233,69,96,0.4);
+    padding: 6px 14px; border-radius: 20px; margin: 4px; font-size: 0.9rem;
+  }
+  .player-chip .remove { cursor: pointer; color: #e94560; font-weight: 900; }
+
+  /* === ИГРОВОЙ ЭКРАН === */
+  #gameScreen { padding-top: 10px; }
+  .game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    width: 100%; max-width: 900px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;
+  }
+  .info-pill {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    padding: 8px 18px; border-radius: 30px; font-size: 0.95rem;
+  }
+  .info-pill span { color: #feca57; font-weight: 900; }
+  .letter-display {
+    font-size: 4rem; font-weight: 900; color: #feca57;
+    text-shadow: 0 0 30px rgba(254,202,87,0.5); line-height: 1;
+  }
+
+  /* Банка */
+  .jar-container {
+    position: relative; width: 200px; height: 320px; margin: 10px auto;
+  }
+  .jar {
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 160px; height: 260px;
+    background: rgba(255,255,255,0.08);
+    border: 3px solid rgba(255,255,255,0.25);
+    border-radius: 10px 10px 40px 40px;
+    overflow: hidden;
+    box-shadow: inset 0 0 30px rgba(255,255,255,0.05), 0 10px 40px rgba(0,0,0,0.5);
+  }
+  .jar-neck {
+    position: absolute; top: -35px; left: 50%; transform: translateX(-50%);
+    width: 60px; height: 40px;
+    background: rgba(255,255,255,0.08);
+    border: 3px solid rgba(255,255,255,0.25);
+    border-bottom: none; border-radius: 10px 10px 0 0;
+  }
+  .jar-rim {
+    position: absolute; top: -42px; left: 50%; transform: translateX(-50%);
+    width: 70px; height: 10px;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 5px;
+  }
+  .liquid {
+    position: absolute; bottom: 0; left: 0; width: 100%;
+    background: linear-gradient(180deg, #e94560 0%, #c73e54 100%);
+    transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: inset 0 -10px 20px rgba(0,0,0,0.3);
+  }
+  .liquid::before {
+    content: ''; position: absolute; top: -5px; left: 0; width: 100%; height: 10px;
+    background: rgba(255,255,255,0.3); border-radius: 50%;
+  }
+  .bubble {
+    position: absolute; background: rgba(255,255,255,0.3);
+    border-radius: 50%; animation: rise 2s infinite ease-in;
+  }
+  @keyframes rise {
+    0% { transform: translateY(0) scale(1); opacity: 0.6; }
+    100% { transform: translateY(-200px) scale(0.3); opacity: 0; }
+  }
+  .jar-label {
+    position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+    font-size: 0.75rem; color: rgba(255,255,255,0.5); white-space: nowrap;
+  }
+  .volume-text {
+    position: absolute; top: -70px; left: 50%; transform: translateX(-50%);
+    font-size: 1.1rem; font-weight: 700; color: #fff;
+    white-space: nowrap;
+  }
+  .measure-lines {
+    position: absolute; right: 5px; top: 10px; bottom: 10px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    align-items: flex-end;
+  }
+  .measure-line {
+    width: 15px; height: 1px; background: rgba(255,255,255,0.3);
+    position: relative;
+  }
+  .measure-line::after {
+    content: attr(data-val); position: absolute; right: 20px; top: -8px;
+    font-size: 0.65rem; color: rgba(255,255,255,0.4);
+  }
+
+  /* Игроки */
+  .players-bar {
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+    max-width: 900px; margin: 10px 0;
+  }
+  .player-card {
+    background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 16px; padding: 10px 16px; text-align: center; min-width: 100px;
+    transition: 0.3s;
+  }
+  .player-card.active {
+    border-color: #feca57; background: rgba(254,202,87,0.1);
+    box-shadow: 0 0 20px rgba(254,202,87,0.2);
+    transform: scale(1.05);
+  }
+  .player-card.eliminated {
+    opacity: 0.4; border-color: #e94560; text-decoration: line-through;
+  }
+  .player-card .p-name { font-weight: 700; font-size: 0.95rem; }
+  .player-card .p-score { font-size: 0.8rem; color: #aaa; margin-top: 4px; }
+
+  /* Ввод */
+  .input-area {
+    display: flex; gap: 10px; max-width: 500px; width: 100%; margin-top: 15px;
+  }
+  .input-area input {
+    flex: 1; padding: 14px 18px; font-size: 1.2rem;
+    border: 2px solid rgba(255,255,255,0.2); border-radius: 14px;
+    background: rgba(0,0,0,0.3); color: #fff; outline: none;
+  }
+  .input-area input:focus { border-color: #e94560; }
+  .input-area input:disabled { opacity: 0.5; }
+  .timer-bar {
+    width: 100%; max-width: 500px; height: 4px;
+    background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 8px;
+    overflow: hidden;
+  }
+  .timer-fill {
+    height: 100%; width: 100%; background: linear-gradient(90deg, #feca57, #e94560);
+    transition: width 0.1s linear;
+  }
+
+  /* История */
+  .history-box {
+    max-width: 500px; width: 100%; max-height: 140px; overflow-y: auto;
+    background: rgba(0,0,0,0.2); border-radius: 14px; padding: 12px;
+    margin-top: 15px; font-size: 0.9rem;
+  }
+  .history-box::-webkit-scrollbar { width: 6px; }
+  .history-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+  .history-item { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .history-item:last-child { border-bottom: none; }
+  .history-item .h-word { color: #feca57; font-weight: 700; }
+  .history-item .h-vol { color: #e94560; font-size: 0.8rem; }
+
+  /* Модалка */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    display: none; align-items: center; justify-content: center; z-index: 100;
+    backdrop-filter: blur(5px);
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 24px;
+    padding: 40px; max-width: 420px; width: 90%; text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .modal h2 { font-size: 2rem; margin-bottom: 15px; }
+  .modal p { color: #aaa; margin-bottom: 25px; line-height: 1.6; }
+  .modal .big-letter {
+    font-size: 5rem; font-weight: 900; color: #feca57;
+    text-shadow: 0 0 40px rgba(254,202,87,0.4); margin: 10px 0;
+  }
+
+  /* Анимации */
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    40% { transform: translateX(10px); }
+    60% { transform: translateX(-10px); }
+    80% { transform: translateX(10px); }
+  }
+  .shake { animation: shake 0.5s ease; }
+  @keyframes pop {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .pop { animation: pop 0.4s ease; }
+  @keyframes pour {
+    0% { transform: translateY(-50px) scaleY(0); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(0) scaleY(1); opacity: 1; }
+  }
+
+  .rules { font-size: 0.85rem; color: #888; margin-top: 15px; line-height: 1.6; }
+  .rules b { color: #ccc; }
+
+  /* Перелив */
+  .overflow-effect {
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 160px; height: 0; background: rgba(233,69,96,0.6);
+    border-radius: 0 0 40px 40px; transition: height 0.5s;
+    pointer-events: none;
+  }
+  .overflow-effect.spill { height: 30px; animation: spillShake 0.5s ease; }
+  @keyframes spillShake {
+    0%,100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(5px); }
+  }
+
+  /* Победитель */
+  .winner-crown { font-size: 4rem; margin-bottom: 10px; }
+</style>
+<base target="_blank">
+</head>
+<body>
+
+<!-- === СТАРТОВЫЙ ЭКРАН === -->
+<div class="screen active" id="startScreen">
+  <div class="title">БАНКА СЛОВ</div>
+  <div class="subtitle">Заполни банку, не перелей!</div>
+
+  <div class="card pop">
+    <div class="input-group">
+      <label>Имя игрока</label>
+      <input type="text" id="playerNameInput" placeholder="Введите имя..." maxlength="15"
+             onkeydown="if(event.key==='Enter')addPlayer()">
+    </div>
+    <button class="btn btn-secondary" onclick="addPlayer()">➕ Добавить игрока</button>
+
+    <div class="players-list" id="playersList"></div>
+
+    <div class="input-group" style="margin-top:15px">
+      <label>Режим игры</label>
+      <select id="gameMode">
+        <option value="survival">Выживание — последний остаётся</option>
+        <option value="precision">Точность — кто ближе к краю</option>
+      </select>
+    </div>
+
+    <button class="btn btn-primary" onclick="startGame()" id="startBtn" disabled>🚀 Начать игру</button>
+
+    <div class="rules">
+      <b>Правила:</b><br>
+      • Каждая буква = <b>0.15 литра</b><br>
+      • Слова длиннее <b>12 букв</b> не пролезают в горлышко<br>
+      • На ход <b>15 секунд</b> — не успел = пропуск<br>
+      • Перелил банку = <b>вылетел</b>
+    </div>
+  </div>
+</div>
+
+<!-- === ИГРОВОЙ ЭКРАН === -->
+<div class="screen" id="gameScreen">
+  <div class="game-header">
+    <div class="info-pill">Буква: <span id="currentLetter">?</span></div>
+    <div class="info-pill">Банка: <span id="jarSize">?</span></div>
+    <div class="info-pill">Заполнено: <span id="fillPercent">0%</span></div>
+  </div>
+
+  <div class="jar-container" id="jarContainer">
+    <div class="volume-text" id="volumeText">0 / 5 л</div>
+    <div class="jar-rim"></div>
+    <div class="jar-neck"></div>
+    <div class="jar" id="jar">
+      <div class="measure-lines" id="measureLines"></div>
+      <div class="liquid" id="liquid" style="height:0%"></div>
+      <div class="overflow-effect" id="overflow"></div>
+      <div class="jar-label" id="jarLabel">5 литров</div>
+    </div>
+  </div>
+
+  <div class="players-bar" id="playersBar"></div>
+
+  <div class="input-area">
+    <input type="text" id="wordInput" placeholder="Слово на букву..." maxlength="25"
+           onkeydown="if(event.key==='Enter')submitWord()" disabled>
+    <button class="btn btn-primary" onclick="submitWord()" id="submitBtn" style="width:auto;padding:14px 24px">Влить</button>
+  </div>
+  <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+
+  <div class="history-box" id="historyBox">
+    <div style="color:#666;text-align:center">История ходов появится здесь...</div>
+  </div>
+</div>
+
+<!-- === МОДАЛКИ === -->
+<div class="modal-overlay" id="roundModal">
+  <div class="modal">
+    <div class="big-letter" id="modalLetter">А</div>
+    <h2>Новый раунд!</h2>
+    <p>Банка: <b id="modalJar">5 литров</b><br>Все слова должны начинаться на букву <b id="modalLetterText">А</b></p>
+    <button class="btn btn-primary" onclick="closeRoundModal()">Поехали!</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resultModal">
+  <div class="modal">
+    <div class="winner-crown" id="resultIcon">🏆</div>
+    <h2 id="resultTitle">Победитель!</h2>
+    <p id="resultText"></p>
+    <button class="btn btn-primary" onclick="location.reload()">🔄 Новая игра</button>
+  </div>
+</div>
+
+<script>
+// === ДАННЫЕ ===
+const LETTERS = 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЭЮЯ'.split('');
+const LETTER_VOLUME = 0.15; // литра на букву
+const NECK_LIMIT = 12; // макс букв через горлышко
+const TURN_TIME = 15; // секунд на ход
+
+let players = [];
+let gameMode = 'survival';
+let currentLetter = '';
+let jarCapacity = 5;
+let currentVolume = 0;
+let currentPlayerIndex = 0;
+let usedWords = new Set();
+let timerInterval = null;
+let timeLeft = TURN_TIME;
+let gameActive = false;
+let roundNumber = 1;
+
+// === УПРАВЛЕНИЕ ИГРОКАМИ ===
+function addPlayer() {
+  const input = document.getElementById('playerNameInput');
+  const name = input.value.trim();
+  if (!name) return;
+  if (players.find(p => p.name === name)) { alert('Такой игрок уже есть!'); return; }
+  if (players.length >= 12) { alert('Максимум 12 игроков!'); return; }
+  players.push({ name, score: 0, eliminated: false, words: [] });
+  input.value = '';
+  renderPlayersList();
+  document.getElementById('startBtn').disabled = players.length < 2;
+}
+
+function removePlayer(name) {
+  players = players.filter(p => p.name !== name);
+  renderPlayersList();
+  document.getElementById('startBtn').disabled = players.length < 2;
+}
+
+function renderPlayersList() {
+  const box = document.getElementById('playersList');
+  box.innerHTML = players.map(p => 
+    `<span class="player-chip">${p.name} <span class="remove" onclick="removePlayer('${p.name}')">×</span></span>`
+  ).join('');
+}
+
+// === СТАРТ ИГРЫ ===
+function startGame() {
+  gameMode = document.getElementById('gameMode').value;
+  document.getElementById('startScreen').classList.remove('active');
+  document.getElementById('gameScreen').classList.add('active');
+  startRound();
+}
+
+function startRound() {
+  currentLetter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
+  jarCapacity = Math.random() < 0.5 ? 5 : 10;
+  currentVolume = 0;
+  currentPlayerIndex = 0;
+  usedWords.clear();
+  gameActive = true;
+  roundNumber++;
+
+  // Сброс визуала
+  document.getElementById('liquid').style.height = '0%';
+  document.getElementById('overflow').classList.remove('spill');
+  document.getElementById('volumeText').textContent = `0 / ${jarCapacity} л`;
+  document.getElementById('fillPercent').textContent = '0%';
+  document.getElementById('jarSize').textContent = jarCapacity + ' л';
+  document.getElementById('jarLabel').textContent = jarCapacity + ' литров';
+  document.getElementById('currentLetter').textContent = currentLetter;
+  document.getElementById('historyBox').innerHTML = '<div style="color:#666;text-align:center">История ходов появится здесь...</div>';
+
+  // Разметка делений
+  const linesBox = document.getElementById('measureLines');
+  linesBox.innerHTML = '';
+  const steps = jarCapacity === 5 ? 5 : 10;
+  for (let i = 0; i <= steps; i++) {
+    const line = document.createElement('div');
+    line.className = 'measure-line';
+    line.style.position = 'absolute';
+    line.style.bottom = (i / steps * 100) + '%';
+    line.style.width = '15px';
+    line.setAttribute('data-val', i + 'л');
+    linesBox.appendChild(line);
+  }
+
+  // Показ модалки
+  document.getElementById('modalLetter').textContent = currentLetter;
+  document.getElementById('modalLetterText').textContent = currentLetter;
+  document.getElementById('modalJar').textContent = jarCapacity + ' литров';
+  document.getElementById('roundModal').classList.add('active');
+
+  renderPlayersBar();
+}
+
+function closeRoundModal() {
+  document.getElementById('roundModal').classList.remove('active');
+  startTurn();
+}
+
+// === ХОД ===
+function getActivePlayers() {
+  return players.filter(p => !p.eliminated);
+}
+
+function startTurn() {
+  const active = getActivePlayers();
+  if (active.length === 0) { endGame(); return; }
+  if (active.length === 1 && gameMode === 'survival') { endGame(); return; }
+
+  // Найти следующего активного
+  while (players[currentPlayerIndex].eliminated) {
+    currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+  }
+
+  renderPlayersBar();
+  const input = document.getElementById('wordInput');
+  input.value = '';
+  input.disabled = false;
+  input.placeholder = `${players[currentPlayerIndex].name}, слово на «${currentLetter}»...`;
+  input.focus();
+  document.getElementById('submitBtn').disabled = false;
+
+  timeLeft = TURN_TIME;
+  updateTimer();
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timeLeft -= 0.1;
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      handleTimeout();
+    }
+  }, 100);
+}
+
+function updateTimer() {
+  const pct = Math.max(0, (timeLeft / TURN_TIME) * 100);
+  document.getElementById('timerFill').style.width = pct + '%';
+}
+
+function handleTimeout() {
+  const p = players[currentPlayerIndex];
+  addHistory(`⏱ ${p.name} не успел!`, 'timeout');
+  if (gameMode === 'survival') {
+    p.eliminated = true;
+    showToast(`${p.name} выбывает по таймауту!`);
+  }
+  nextTurn();
+}
+
+function submitWord() {
+  if (!gameActive) return;
+  const input = document.getElementById('wordInput');
+  const word = input.value.trim().toUpperCase();
+  const player = players[currentPlayerIndex];
+
+  if (!word) return;
+
+  // Валидация
+  if (word[0] !== currentLetter) {
+    shakeInput(); showToast(`Слово должно начинаться на «${currentLetter}»!`); return;
+  }
+  if (usedWords.has(word)) {
+    shakeInput(); showToast('Это слово уже было!'); return;
+  }
+  if (word.length > NECK_LIMIT) {
+    shakeInput(); showToast(`Слишком длинное! Максимум ${NECK_LIMIT} букв через горлышко.`);
+    if (gameMode === 'survival') {
+      player.eliminated = true;
+      showToast(`${player.name} выбывает! Слово не пролезло в горлышко.`);
+      nextTurn(); return;
+    }
+  }
+
+  const wordVolume = word.length * LETTER_VOLUME;
+
+  // Проверка на перелив
+  if (currentVolume + wordVolume > jarCapacity) {
+    document.getElementById('overflow').classList.add('spill');
+    setTimeout(() => document.getElementById('overflow').classList.remove('spill'), 1000);
+
+    if (gameMode === 'survival') {
+      player.eliminated = true;
+      showToast(`${player.name} перелил банку и выбывает!`);
+      addHistory(`💥 ${player.name}: «${word}» — ПЕРЕЛИВ!`, 'overflow');
+      nextTurn(); return;
+    } else {
+      // precision mode: штраф
+      player.score -= Math.round((currentVolume + wordVolume - jarCapacity) * 100);
+      showToast(`${player.name} перелил! Штраф.`);
+    }
+  }
+
+  // Успех
+  usedWords.add(word);
+  currentVolume += wordVolume;
+  player.words.push(word);
+  player.score += Math.round(wordVolume * 100);
+
+  // Визуал
+  const fillPct = (currentVolume / jarCapacity) * 100;
+  document.getElementById('liquid').style.height = fillPct + '%';
+  document.getElementById('volumeText').textContent = `${currentVolume.toFixed(2)} / ${jarCapacity} л`;
+  document.getElementById('fillPercent').textContent = Math.round(fillPct) + '%';
+
+  // Пузырьки
+  createBubbles(word.length);
+
+  addHistory(`${player.name}: «${word}» — +${wordVolume.toFixed(2)}л`, 'normal');
+
+  // Точность — проверка победы
+  if (gameMode === 'precision' && Math.abs(currentVolume - jarCapacity) < 0.01) {
+    endGame(); return;
+  }
+
+  nextTurn();
+}
+
+function nextTurn() {
+  clearInterval(timerInterval);
+  document.getElementById('wordInput').disabled = true;
+  document.getElementById('submitBtn').disabled = true;
+
+  // Проверка конца
+  const active = getActivePlayers();
+  if (active.length === 0) { endGame(); return; }
+  if (active.length === 1 && gameMode === 'survival') { endGame(); return; }
+  if (currentVolume >= jarCapacity && gameMode === 'survival') { endGame(); return; }
+
+  currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+  setTimeout(startTurn, 1000);
+}
+
+// === ВИЗУАЛ ===
+function renderPlayersBar() {
+  const bar = document.getElementById('playersBar');
+  bar.innerHTML = players.map((p, i) => {
+    const isActive = i === currentPlayerIndex && !p.eliminated && gameActive;
+    const cls = isActive ? 'active' : (p.eliminated ? 'eliminated' : '');
+    return `<div class="player-card ${cls}">
+      <div class="p-name">${p.name}</div>
+      <div class="p-score">${p.eliminated ? '❌' : p.score + ' очков'}</div>
+    </div>`;
+  }).join('');
+}
+
+function createBubbles(count) {
+  const jar = document.getElementById('jar');
+  for (let i = 0; i < Math.min(count, 8); i++) {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    b.style.width = (4 + Math.random() * 8) + 'px';
+    b.style.height = b.style.width;
+    b.style.left = (20 + Math.random() * 60) + '%';
+    b.style.bottom = (10 + Math.random() * 30) + '%';
+    b.style.animationDuration = (1 + Math.random() * 2) + 's';
+    jar.appendChild(b);
+    setTimeout(() => b.remove(), 2500);
+  }
+}
+
+function addHistory(text, type) {
+  const box = document.getElementById('historyBox');
+  if (box.children.length === 1 && box.children[0].style.color === 'rgb(102, 102, 102)') {
+    box.innerHTML = '';
+  }
+  const div = document.createElement('div');
+  div.className = 'history-item pop';
+  let color = '#fff';
+  if (type === 'overflow') color = '#e94560';
+  if (type === 'timeout') color = '#888';
+  div.style.color = color;
+  div.textContent = text;
+  box.insertBefore(div, box.firstChild);
+}
+
+function shakeInput() {
+  const input = document.getElementById('wordInput');
+  input.classList.add('shake');
+  setTimeout(() => input.classList.remove('shake'), 500);
+}
+
+function showToast(msg) {
+  // Простой алерт-заменитель через временный div
+  const div = document.createElement('div');
+  div.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(233,69,96,0.95);color:#fff;padding:12px 24px;border-radius:12px;font-weight:700;z-index:200;animation:pop 0.3s ease;';
+  div.textContent = msg;
+  document.body.appendChild(div);
+  setTimeout(() => { div.style.opacity = '0'; div.style.transition = '0.5s'; setTimeout(() => div.remove(), 500); }, 2500);
+}
+
+// === КОНЕЦ ИГРЫ ===
+function endGame() {
+  gameActive = false;
+  clearInterval(timerInterval);
+
+  let winner, text;
+  const active = getActivePlayers();
+
+  if (gameMode === 'survival') {
+    if (active.length === 1) {
+      winner = active[0];
+      text = `${winner.name} победил, оставшись последним!`;
+    } else if (active.length === 0) {
+      text = 'Все выбыли! Ничья.';
+    } else {
+      // Осталось несколько, банка полна
+      winner = active.reduce((a, b) => a.score > b.score ? a : b);
+      text = `${winner.name} победил по очкам!`;
+    }
+  } else {
+    winner = players.reduce((a, b) => a.score > b.score ? a : b);
+    const diff = Math.abs(currentVolume - jarCapacity).toFixed(2);
+    text = `${winner.name} набрал больше всего очков!<br>Банка заполнена на ${currentVolume.toFixed(2)}л из ${jarCapacity}л (разница ${diff}л)`;
+  }
+
+  document.getElementById('resultTitle').textContent = winner ? '🏆 ' + winner.name + ' победил!' : 'Игра окончена!';
+  document.getElementById('resultText').innerHTML = text;
+  document.getElementById('resultModal').classList.add('active');
+}
+</script>
+</body>
+</html>
