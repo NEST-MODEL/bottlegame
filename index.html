@@ -3,680 +3,896 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Банка Слов — Игра</title>
+<title>Банка — игра на выбывание</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: 'Nunito', sans-serif;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-    min-height: 100vh;
-    color: #fff;
-    overflow-x: hidden;
+  :root{
+    --bg-deep:#16211d;
+    --bg-panel:#1f2f29;
+    --bg-panel-2:#26382f;
+    --glass-edge:#7fa89c;
+    --glass-edge-dim:#3c534a;
+    --liquid-1:#f2b23e;
+    --liquid-2:#c97a2e;
+    --liquid-dark:#8a4f1c;
+    --kraft:#c9a24b;
+    --kraft-dim:#8f7638;
+    --ink:#f1ead9;
+    --ink-dim:#b9c4bb;
+    --danger:#d9694f;
+    --ok:#7fb069;
+    --radius:14px;
   }
-  .screen { display: none; min-height: 100vh; padding: 20px; }
-  .screen.active { display: flex; flex-direction: column; align-items: center; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at 20% -10%, #23362f 0%, transparent 55%),
+      radial-gradient(ellipse at 90% 110%, #1c2b25 0%, transparent 55%),
+      var(--bg-deep);
+    color:var(--ink);
+    font-family:'Manrope',sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:32px 16px 64px;
+  }
+  .stage{
+    width:100%;
+    max-width:980px;
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    justify-content:center;
+    margin-bottom:6px;
+  }
+  .brand h1{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:clamp(32px,5vw,46px);
+    letter-spacing:0.5px;
+    margin:0;
+    color:var(--ink);
+  }
+  .brand .tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--kraft);
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    border:1px solid var(--kraft-dim);
+    border-radius:999px;
+    padding:4px 10px;
+  }
+  .subtitle{
+    text-align:center;
+    color:var(--ink-dim);
+    font-size:15px;
+    margin:0 0 32px;
+  }
+  .panel{
+    background:linear-gradient(180deg,var(--bg-panel),var(--bg-panel-2));
+    border:1px solid var(--glass-edge-dim);
+    border-radius:var(--radius);
+    padding:28px;
+    box-shadow:0 20px 50px -20px rgba(0,0,0,0.6);
+  }
+  /* ---------- SETUP ---------- */
+  .setup-grid{display:flex;flex-direction:column;gap:24px;}
+  label.field-label{
+    display:block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--kraft);
+    margin-bottom:10px;
+  }
+  .count-row{display:flex;align-items:center;gap:16px;}
+  .count-btn{
+    width:40px;height:40px;border-radius:10px;
+    border:1px solid var(--glass-edge-dim);
+    background:var(--bg-panel-2);
+    color:var(--ink);
+    font-size:20px;
+    cursor:pointer;
+    transition:transform .1s ease, background .15s ease;
+  }
+  .count-btn:hover{background:#31463b;}
+  .count-btn:active{transform:scale(0.94);}
+  .count-value{
+    font-family:'Fraunces',serif;
+    font-size:28px;
+    font-weight:600;
+    min-width:40px;
+    text-align:center;
+  }
+  .names-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+    gap:10px;
+  }
+  .names-grid input{
+    background:#14201b;
+    border:1px solid var(--glass-edge-dim);
+    color:var(--ink);
+    border-radius:10px;
+    padding:10px 12px;
+    font-family:'Manrope',sans-serif;
+    font-size:14px;
+  }
+  .names-grid input:focus{outline:1.5px solid var(--liquid-1);}
+  .jar-choice{display:flex;gap:10px;flex-wrap:wrap;}
+  .chip{
+    padding:10px 18px;
+    border-radius:999px;
+    border:1px solid var(--glass-edge-dim);
+    background:var(--bg-panel-2);
+    color:var(--ink-dim);
+    font-size:14px;
+    cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;
+    transition:all .15s ease;
+  }
+  .chip.active{
+    background:linear-gradient(180deg,var(--liquid-1),var(--liquid-2));
+    color:#241304;
+    border-color:transparent;
+    font-weight:600;
+  }
+  .rules-box{
+    background:#14201b;
+    border:1px dashed var(--glass-edge-dim);
+    border-radius:10px;
+    padding:16px 18px;
+    font-size:13.5px;
+    color:var(--ink-dim);
+    line-height:1.6;
+  }
+  .rules-box b{color:var(--ink);}
+  .start-btn{
+    margin-top:6px;
+    width:100%;
+    padding:16px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(180deg,var(--liquid-1),var(--liquid-2));
+    color:#241304;
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:19px;
+    letter-spacing:0.3px;
+    cursor:pointer;
+    box-shadow:0 10px 24px -8px rgba(201,122,46,0.5);
+    transition:transform .1s ease;
+  }
+  .start-btn:hover{transform:translateY(-1px);}
+  .start-btn:active{transform:translateY(0px) scale(0.99);}
 
-  /* === СТАРТОВЫЙ ЭКРАН === */
-  #startScreen { justify-content: center; }
-  .title {
-    font-size: 3.5rem; font-weight: 900;
-    background: linear-gradient(90deg, #e94560, #ff6b6b, #feca57);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    text-align: center; margin-bottom: 10px; text-shadow: none;
+  /* ---------- GAME ---------- */
+  .game-layout{
+    display:grid;
+    grid-template-columns:320px 1fr;
+    gap:28px;
   }
-  .subtitle { font-size: 1.2rem; color: #a0a0a0; margin-bottom: 40px; text-align: center; }
-  .card {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 20px;
-    padding: 30px;
-    max-width: 500px;
-    width: 100%;
-    backdrop-filter: blur(10px);
-  }
-  .input-group { margin-bottom: 20px; }
-  .input-group label { display: block; margin-bottom: 8px; color: #ccc; font-weight: 700; }
-  .input-group input, .input-group select {
-    width: 100%; padding: 12px 16px;
-    border: 2px solid rgba(255,255,255,0.15);
-    border-radius: 12px; background: rgba(0,0,0,0.3);
-    color: #fff; font-size: 1rem; outline: none; transition: 0.3s;
-  }
-  .input-group input:focus, .input-group select:focus { border-color: #e94560; }
-  .btn {
-    width: 100%; padding: 14px; border: none; border-radius: 12px;
-    font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.3s;
-    text-transform: uppercase; letter-spacing: 1px;
-  }
-  .btn-primary {
-    background: linear-gradient(90deg, #e94560, #ff6b6b);
-    color: #fff; box-shadow: 0 4px 20px rgba(233,69,96,0.4);
-  }
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(233,69,96,0.6); }
-  .btn-secondary {
-    background: rgba(255,255,255,0.1); color: #fff; margin-top: 10px;
-  }
-  .btn-secondary:hover { background: rgba(255,255,255,0.2); }
-  .players-list { margin: 15px 0; }
-  .player-chip {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(233,69,96,0.2); border: 1px solid rgba(233,69,96,0.4);
-    padding: 6px 14px; border-radius: 20px; margin: 4px; font-size: 0.9rem;
-  }
-  .player-chip .remove { cursor: pointer; color: #e94560; font-weight: 900; }
+  @media (max-width:760px){ .game-layout{grid-template-columns:1fr;} }
 
-  /* === ИГРОВОЙ ЭКРАН === */
-  #gameScreen { padding-top: 10px; }
-  .game-header {
-    display: flex; justify-content: space-between; align-items: center;
-    width: 100%; max-width: 900px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;
+  .jar-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .capacity-readout{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;
+    color:var(--ink-dim);
+    text-align:center;
   }
-  .info-pill {
-    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
-    padding: 8px 18px; border-radius: 30px; font-size: 0.95rem;
-  }
-  .info-pill span { color: #feca57; font-weight: 900; }
-  .letter-display {
-    font-size: 4rem; font-weight: 900; color: #feca57;
-    text-shadow: 0 0 30px rgba(254,202,87,0.5); line-height: 1;
-  }
+  .capacity-readout .num{color:var(--liquid-1);font-weight:600;font-size:16px;}
+  svg#jarSvg{width:100%;max-width:280px;height:auto;}
+  #liquid{transition:y .6s cubic-bezier(.4,0,.2,1), height .6s cubic-bezier(.4,0,.2,1);}
+  .lives-row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:4px;}
+  .life-dot{width:9px;height:9px;border-radius:50%;background:var(--danger);opacity:0.25;}
+  .life-dot.on{opacity:1;}
 
-  /* Банка */
-  .jar-container {
-    position: relative; width: 200px; height: 320px; margin: 10px auto;
-  }
-  .jar {
-    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 160px; height: 260px;
-    background: rgba(255,255,255,0.08);
-    border: 3px solid rgba(255,255,255,0.25);
-    border-radius: 10px 10px 40px 40px;
-    overflow: hidden;
-    box-shadow: inset 0 0 30px rgba(255,255,255,0.05), 0 10px 40px rgba(0,0,0,0.5);
-  }
-  .jar-neck {
-    position: absolute; top: -35px; left: 50%; transform: translateX(-50%);
-    width: 60px; height: 40px;
-    background: rgba(255,255,255,0.08);
-    border: 3px solid rgba(255,255,255,0.25);
-    border-bottom: none; border-radius: 10px 10px 0 0;
-  }
-  .jar-rim {
-    position: absolute; top: -42px; left: 50%; transform: translateX(-50%);
-    width: 70px; height: 10px;
-    background: rgba(255,255,255,0.15);
-    border: 2px solid rgba(255,255,255,0.3);
-    border-radius: 5px;
-  }
-  .liquid {
-    position: absolute; bottom: 0; left: 0; width: 100%;
-    background: linear-gradient(180deg, #e94560 0%, #c73e54 100%);
-    transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: inset 0 -10px 20px rgba(0,0,0,0.3);
-  }
-  .liquid::before {
-    content: ''; position: absolute; top: -5px; left: 0; width: 100%; height: 10px;
-    background: rgba(255,255,255,0.3); border-radius: 50%;
-  }
-  .bubble {
-    position: absolute; background: rgba(255,255,255,0.3);
-    border-radius: 50%; animation: rise 2s infinite ease-in;
-  }
-  @keyframes rise {
-    0% { transform: translateY(0) scale(1); opacity: 0.6; }
-    100% { transform: translateY(-200px) scale(0.3); opacity: 0; }
-  }
-  .jar-label {
-    position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
-    font-size: 0.75rem; color: rgba(255,255,255,0.5); white-space: nowrap;
-  }
-  .volume-text {
-    position: absolute; top: -70px; left: 50%; transform: translateX(-50%);
-    font-size: 1.1rem; font-weight: 700; color: #fff;
-    white-space: nowrap;
-  }
-  .measure-lines {
-    position: absolute; right: 5px; top: 10px; bottom: 10px;
-    display: flex; flex-direction: column; justify-content: space-between;
-    align-items: flex-end;
-  }
-  .measure-line {
-    width: 15px; height: 1px; background: rgba(255,255,255,0.3);
-    position: relative;
-  }
-  .measure-line::after {
-    content: attr(data-val); position: absolute; right: 20px; top: -8px;
-    font-size: 0.65rem; color: rgba(255,255,255,0.4);
-  }
-
-  /* Игроки */
-  .players-bar {
-    display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
-    max-width: 900px; margin: 10px 0;
-  }
-  .player-card {
-    background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1);
-    border-radius: 16px; padding: 10px 16px; text-align: center; min-width: 100px;
-    transition: 0.3s;
-  }
-  .player-card.active {
-    border-color: #feca57; background: rgba(254,202,87,0.1);
-    box-shadow: 0 0 20px rgba(254,202,87,0.2);
-    transform: scale(1.05);
-  }
-  .player-card.eliminated {
-    opacity: 0.4; border-color: #e94560; text-decoration: line-through;
-  }
-  .player-card .p-name { font-weight: 700; font-size: 0.95rem; }
-  .player-card .p-score { font-size: 0.8rem; color: #aaa; margin-top: 4px; }
-
-  /* Ввод */
-  .input-area {
-    display: flex; gap: 10px; max-width: 500px; width: 100%; margin-top: 15px;
-  }
-  .input-area input {
-    flex: 1; padding: 14px 18px; font-size: 1.2rem;
-    border: 2px solid rgba(255,255,255,0.2); border-radius: 14px;
-    background: rgba(0,0,0,0.3); color: #fff; outline: none;
-  }
-  .input-area input:focus { border-color: #e94560; }
-  .input-area input:disabled { opacity: 0.5; }
-  .timer-bar {
-    width: 100%; max-width: 500px; height: 4px;
-    background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 8px;
-    overflow: hidden;
-  }
-  .timer-fill {
-    height: 100%; width: 100%; background: linear-gradient(90deg, #feca57, #e94560);
-    transition: width 0.1s linear;
-  }
-
-  /* История */
-  .history-box {
-    max-width: 500px; width: 100%; max-height: 140px; overflow-y: auto;
-    background: rgba(0,0,0,0.2); border-radius: 14px; padding: 12px;
-    margin-top: 15px; font-size: 0.9rem;
-  }
-  .history-box::-webkit-scrollbar { width: 6px; }
-  .history-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
-  .history-item { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-  .history-item:last-child { border-bottom: none; }
-  .history-item .h-word { color: #feca57; font-weight: 700; }
-  .history-item .h-vol { color: #e94560; font-size: 0.8rem; }
-
-  /* Модалка */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-    display: none; align-items: center; justify-content: center; z-index: 100;
-    backdrop-filter: blur(5px);
-  }
-  .modal-overlay.active { display: flex; }
-  .modal {
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
-    border: 1px solid rgba(255,255,255,0.15); border-radius: 24px;
-    padding: 40px; max-width: 420px; width: 90%; text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-  }
-  .modal h2 { font-size: 2rem; margin-bottom: 15px; }
-  .modal p { color: #aaa; margin-bottom: 25px; line-height: 1.6; }
-  .modal .big-letter {
-    font-size: 5rem; font-weight: 900; color: #feca57;
-    text-shadow: 0 0 40px rgba(254,202,87,0.4); margin: 10px 0;
+  .letter-badge{
+    width:64px;height:64px;
+    border-radius:14px;
+    background:linear-gradient(180deg,#2c4038,#1a2721);
+    border:1px solid var(--glass-edge-dim);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;
+    font-size:34px;
+    font-weight:700;
+    color:var(--liquid-1);
+    margin:0 auto 8px;
   }
 
-  /* Анимации */
-  @keyframes shake {
-    0%,100% { transform: translateX(0); }
-    20% { transform: translateX(-10px); }
-    40% { transform: translateX(10px); }
-    60% { transform: translateX(-10px); }
-    80% { transform: translateX(10px); }
+  .players-strip{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:center;
+    margin-top:14px;
   }
-  .shake { animation: shake 0.5s ease; }
-  @keyframes pop {
-    0% { transform: scale(0.8); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+  .player-pill{
+    padding:7px 12px;
+    border-radius:999px;
+    background:var(--bg-panel-2);
+    border:1px solid var(--glass-edge-dim);
+    font-size:12.5px;
+    color:var(--ink-dim);
+    font-family:'IBM Plex Mono',monospace;
+    display:flex;align-items:center;gap:6px;
   }
-  .pop { animation: pop 0.4s ease; }
-  @keyframes pour {
-    0% { transform: translateY(-50px) scaleY(0); opacity: 0; }
-    50% { opacity: 1; }
-    100% { transform: translateY(0) scaleY(1); opacity: 1; }
+  .player-pill.active{
+    border-color:var(--liquid-1);
+    color:var(--ink);
+    background:#33291a;
   }
-
-  .rules { font-size: 0.85rem; color: #888; margin-top: 15px; line-height: 1.6; }
-  .rules b { color: #ccc; }
-
-  /* Перелив */
-  .overflow-effect {
-    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 160px; height: 0; background: rgba(233,69,96,0.6);
-    border-radius: 0 0 40px 40px; transition: height 0.5s;
-    pointer-events: none;
-  }
-  .overflow-effect.spill { height: 30px; animation: spillShake 0.5s ease; }
-  @keyframes spillShake {
-    0%,100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(5px); }
+  .player-pill.out{
+    opacity:0.35;
+    text-decoration:line-through;
   }
 
-  /* Победитель */
-  .winner-crown { font-size: 4rem; margin-bottom: 10px; }
+  .main-col{display:flex;flex-direction:column;gap:20px;}
+  .turn-header{text-align:center;}
+  .turn-header .who{
+    font-family:'Fraunces',serif;
+    font-size:26px;
+    font-weight:600;
+  }
+  .turn-header .hint{color:var(--ink-dim);font-size:13.5px;margin-top:4px;}
+
+  .word-form{
+    background:#14201b;
+    border:1px solid var(--glass-edge-dim);
+    border-radius:12px;
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .word-form .row{display:flex;gap:12px;flex-wrap:wrap;}
+  .field{flex:1;min-width:160px;}
+  .field label{
+    display:block;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:var(--kraft);
+    font-family:'IBM Plex Mono',monospace;
+    margin-bottom:6px;
+  }
+  .field input{
+    width:100%;
+    background:#0f1814;
+    border:1px solid var(--glass-edge-dim);
+    color:var(--ink);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:16px;
+    font-family:'Manrope',sans-serif;
+  }
+  .field input:focus{outline:1.5px solid var(--liquid-1);}
+  .field .unit{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-dim);margin-top:4px;}
+  .submit-btn{
+    padding:14px;
+    border:none;
+    border-radius:10px;
+    background:linear-gradient(180deg,var(--liquid-1),var(--liquid-2));
+    color:#241304;
+    font-weight:700;
+    font-size:15.5px;
+    font-family:'Fraunces',serif;
+    cursor:pointer;
+  }
+  .submit-btn:hover{filter:brightness(1.05);}
+
+  .flash{
+    border-radius:10px;
+    padding:12px 16px;
+    font-size:14px;
+    font-family:'Manrope',sans-serif;
+    display:none;
+  }
+  .flash.show{display:block;}
+  .flash.error{background:rgba(217,105,79,0.15);border:1px solid var(--danger);color:#ffb9a8;}
+  .flash.ok{background:rgba(127,176,105,0.15);border:1px solid var(--ok);color:#c9e6ba;}
+
+  .log{
+    max-height:220px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column-reverse;
+    gap:8px;
+    padding-right:4px;
+  }
+  .log-item{
+    background:var(--bg-panel-2);
+    border:1px solid var(--glass-edge-dim);
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:13px;
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .log-item .who{color:var(--kraft);font-weight:600;}
+  .log-item.rej{border-color:rgba(217,105,79,0.5);}
+  .log-item.acc .vol{color:var(--liquid-1);font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- CHALLENGE MODAL ---------- */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(10,15,13,0.72);
+    display:none;
+    align-items:center;justify-content:center;
+    padding:20px;
+    z-index:50;
+  }
+  .overlay.show{display:flex;}
+  .modal{
+    background:linear-gradient(180deg,var(--bg-panel),var(--bg-panel-2));
+    border:1px solid var(--glass-edge-dim);
+    border-radius:16px;
+    padding:28px;
+    max-width:420px;
+    width:100%;
+    text-align:center;
+  }
+  .modal .claim-word{
+    font-family:'Fraunces',serif;
+    font-size:28px;
+    font-weight:700;
+    margin:6px 0 2px;
+  }
+  .modal .claim-vol{
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--liquid-1);
+    font-size:15px;
+    margin-bottom:18px;
+  }
+  .modal .subtext{color:var(--ink-dim);font-size:13.5px;margin-bottom:20px;}
+  .modal-btns{display:flex;flex-direction:column;gap:10px;}
+  .modal-btns button{
+    padding:13px;
+    border-radius:10px;
+    border:1px solid var(--glass-edge-dim);
+    background:var(--bg-panel-2);
+    color:var(--ink);
+    font-size:14.5px;
+    font-family:'Manrope',sans-serif;
+    cursor:pointer;
+  }
+  .modal-btns button.primary{
+    background:linear-gradient(180deg,var(--liquid-1),var(--liquid-2));
+    color:#241304;
+    border:none;
+    font-weight:700;
+  }
+  .modal-btns button.danger{
+    background:rgba(217,105,79,0.15);
+    border-color:var(--danger);
+    color:#ffb9a8;
+  }
+  .vote-progress{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-dim);margin-bottom:14px;}
+
+  /* ---------- END ---------- */
+  .end-screen{text-align:center;}
+  .end-screen .medal{font-size:54px;margin-bottom:6px;}
+  .end-screen h2{font-family:'Fraunces',serif;font-size:32px;margin:0 0 8px;}
+  .end-screen p{color:var(--ink-dim);margin:0 0 24px;}
+  .restart-btn{
+    padding:14px 28px;
+    border-radius:10px;
+    border:none;
+    background:linear-gradient(180deg,var(--liquid-1),var(--liquid-2));
+    color:#241304;
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:16px;
+    cursor:pointer;
+  }
+  .hidden{display:none !important;}
+  ::-webkit-scrollbar{width:6px;}
+  ::-webkit-scrollbar-thumb{background:var(--glass-edge-dim);border-radius:6px;}
 </style>
-<base target="_blank">
 </head>
 <body>
+<div class="stage">
+  <div class="brand">
+    <h1>Банка</h1>
+    <span class="tag">игра на выбывание</span>
+  </div>
+  <p class="subtitle">Называй слова на нужную букву. Ври про объём. Не дай банке лопнуть от подозрений.</p>
 
-<!-- === СТАРТОВЫЙ ЭКРАН === -->
-<div class="screen active" id="startScreen">
-  <div class="title">БАНКА СЛОВ</div>
-  <div class="subtitle">Заполни банку, не перелей!</div>
+  <!-- ===================== SETUP ===================== -->
+  <div class="panel" id="setupScreen">
+    <div class="setup-grid">
+      <div>
+        <label class="field-label">Игроков</label>
+        <div class="count-row">
+          <button class="count-btn" id="minus">−</button>
+          <div class="count-value" id="countVal">4</div>
+          <button class="count-btn" id="plus">+</button>
+        </div>
+      </div>
 
-  <div class="card pop">
-    <div class="input-group">
-      <label>Имя игрока</label>
-      <input type="text" id="playerNameInput" placeholder="Введите имя..." maxlength="15"
-             onkeydown="if(event.key==='Enter')addPlayer()">
+      <div>
+        <label class="field-label">Имена</label>
+        <div class="names-grid" id="namesGrid"></div>
+      </div>
+
+      <div>
+        <label class="field-label">Банка</label>
+        <div class="jar-choice">
+          <div class="chip" data-jar="5">5 литров</div>
+          <div class="chip" data-jar="10">10 литров</div>
+          <div class="chip active" data-jar="random">на удачу</div>
+        </div>
+      </div>
+
+      <div class="rules-box">
+        <b>Как играть:</b> в начале выпадает случайная буква и объём банки. Игроки по очереди называют слово на эту букву — предмет, который якобы влезет в банку (горлышко не считается) — и заявляют, <b>сколько литров</b> он займёт. Остальные решают: поверить или крикнуть «не верю!». Если большинство не верит — заявитель теряет жизнь, слово сгорает. Если верят — объём добавляется в банку. Повтор слова или буква не та — тоже минус жизнь. У каждого 3 жизни. Банка наполнилась ровно — тот, кто это сделал, побеждает. Если жизни кончились у всех, кроме одного — победа тому, кто остался.
+      </div>
+
+      <button class="start-btn" id="startBtn">Начать игру</button>
     </div>
-    <button class="btn btn-secondary" onclick="addPlayer()">➕ Добавить игрока</button>
+  </div>
 
-    <div class="players-list" id="playersList"></div>
+  <!-- ===================== GAME ===================== -->
+  <div class="panel hidden" id="gameScreen">
+    <div class="game-layout">
+      <div class="jar-wrap">
+        <div class="letter-badge" id="letterBadge">А</div>
+        <svg id="jarSvg" viewBox="0 0 300 420" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="liquidGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="var(--liquid-1)"/>
+              <stop offset="100%" stop-color="var(--liquid-dark)"/>
+            </linearGradient>
+            <linearGradient id="glassGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#3c534a" stop-opacity="0.5"/>
+              <stop offset="12%" stop-color="#dff0ea" stop-opacity="0.35"/>
+              <stop offset="30%" stop-color="#3c534a" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="#0f1814" stop-opacity="0.35"/>
+            </linearGradient>
+            <clipPath id="jarBodyClip">
+              <path d="M60,150 L240,150 L240,368 Q240,392 216,392 L84,392 Q60,392 60,368 Z"/>
+            </clipPath>
+          </defs>
 
-    <div class="input-group" style="margin-top:15px">
-      <label>Режим игры</label>
-      <select id="gameMode">
-        <option value="survival">Выживание — последний остаётся</option>
-        <option value="precision">Точность — кто ближе к краю</option>
-      </select>
+          <!-- liquid -->
+          <rect id="liquid" x="60" width="180" y="392" height="0" fill="url(#liquidGradient)" clip-path="url(#jarBodyClip)"/>
+
+          <!-- jar outline -->
+          <path d="M112,30 L188,30 L188,92 L240,150 L240,368 Q240,392 216,392 L84,392 Q60,392 60,368 L60,150 L112,92 Z"
+                fill="url(#glassGrad)" stroke="var(--glass-edge)" stroke-width="3" stroke-linejoin="round"/>
+          <!-- rim -->
+          <rect x="104" y="20" width="92" height="14" rx="6" fill="none" stroke="var(--glass-edge)" stroke-width="3"/>
+          <!-- neck label: excluded zone hatch -->
+          <line x1="60" y1="150" x2="240" y2="150" stroke="var(--kraft)" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.6"/>
+        </svg>
+        <div class="capacity-readout">заполнено <span class="num" id="filledNum">0</span> / <span id="capNum">10</span> л</div>
+        <div class="lives-row" id="livesRow"></div>
+        <div class="players-strip" id="playersStrip"></div>
+      </div>
+
+      <div class="main-col">
+        <div class="turn-header">
+          <div class="who" id="turnWho">Ход: Игрок 1</div>
+          <div class="hint">Слово на букву <b id="hintLetter">А</b>, осталось <span id="hintRemain">10</span> л свободного места</div>
+        </div>
+
+        <div class="word-form">
+          <div class="row">
+            <div class="field">
+              <label>Слово</label>
+              <input type="text" id="wordInput" placeholder="например, арбуз" autocomplete="off">
+            </div>
+            <div class="field" style="max-width:160px;">
+              <label>Заявленный объём</label>
+              <input type="number" id="volInput" placeholder="0.0" step="0.1" min="0.1">
+              <div class="unit">литров</div>
+            </div>
+          </div>
+          <div class="flash" id="flashMsg"></div>
+          <button class="submit-btn" id="submitBtn">Положить в банку</button>
+        </div>
+
+        <div>
+          <label class="field-label">Журнал банки</label>
+          <div class="log" id="log"></div>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <button class="btn btn-primary" onclick="startGame()" id="startBtn" disabled>🚀 Начать игру</button>
-
-    <div class="rules">
-      <b>Правила:</b><br>
-      • Каждая буква = <b>0.15 литра</b><br>
-      • Слова длиннее <b>12 букв</b> не пролезают в горлышко<br>
-      • На ход <b>15 секунд</b> — не успел = пропуск<br>
-      • Перелил банку = <b>вылетел</b>
+  <!-- ===================== END ===================== -->
+  <div class="panel hidden" id="endScreen">
+    <div class="end-screen">
+      <div class="medal" id="endMedal">🏆</div>
+      <h2 id="endTitle">Победа!</h2>
+      <p id="endText">Игрок наполнил банку ровно до края.</p>
+      <button class="restart-btn" id="restartBtn">Играть ещё раз</button>
     </div>
   </div>
 </div>
 
-<!-- === ИГРОВОЙ ЭКРАН === -->
-<div class="screen" id="gameScreen">
-  <div class="game-header">
-    <div class="info-pill">Буква: <span id="currentLetter">?</span></div>
-    <div class="info-pill">Банка: <span id="jarSize">?</span></div>
-    <div class="info-pill">Заполнено: <span id="fillPercent">0%</span></div>
-  </div>
-
-  <div class="jar-container" id="jarContainer">
-    <div class="volume-text" id="volumeText">0 / 5 л</div>
-    <div class="jar-rim"></div>
-    <div class="jar-neck"></div>
-    <div class="jar" id="jar">
-      <div class="measure-lines" id="measureLines"></div>
-      <div class="liquid" id="liquid" style="height:0%"></div>
-      <div class="overflow-effect" id="overflow"></div>
-      <div class="jar-label" id="jarLabel">5 литров</div>
-    </div>
-  </div>
-
-  <div class="players-bar" id="playersBar"></div>
-
-  <div class="input-area">
-    <input type="text" id="wordInput" placeholder="Слово на букву..." maxlength="25"
-           onkeydown="if(event.key==='Enter')submitWord()" disabled>
-    <button class="btn btn-primary" onclick="submitWord()" id="submitBtn" style="width:auto;padding:14px 24px">Влить</button>
-  </div>
-  <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
-
-  <div class="history-box" id="historyBox">
-    <div style="color:#666;text-align:center">История ходов появится здесь...</div>
-  </div>
-</div>
-
-<!-- === МОДАЛКИ === -->
-<div class="modal-overlay" id="roundModal">
+<!-- ===================== CHALLENGE MODAL ===================== -->
+<div class="overlay" id="overlay">
   <div class="modal">
-    <div class="big-letter" id="modalLetter">А</div>
-    <h2>Новый раунд!</h2>
-    <p>Банка: <b id="modalJar">5 литров</b><br>Все слова должны начинаться на букву <b id="modalLetterText">А</b></p>
-    <button class="btn btn-primary" onclick="closeRoundModal()">Поехали!</button>
-  </div>
-</div>
-
-<div class="modal-overlay" id="resultModal">
-  <div class="modal">
-    <div class="winner-crown" id="resultIcon">🏆</div>
-    <h2 id="resultTitle">Победитель!</h2>
-    <p id="resultText"></p>
-    <button class="btn btn-primary" onclick="location.reload()">🔄 Новая игра</button>
+    <div style="font-size:12px;color:var(--ink-dim);font-family:'IBM Plex Mono',monospace;letter-spacing:1px;text-transform:uppercase;">заявка</div>
+    <div class="claim-word" id="claimWord">арбуз</div>
+    <div class="claim-vol" id="claimVol">≈ 2.5 л</div>
+    <div id="modalStage1">
+      <div class="subtext">Остальные — верите заявленному объёму?</div>
+      <div class="modal-btns">
+        <button class="primary" id="acceptAllBtn">Все верят — положить в банку</button>
+        <button class="danger" id="challengeBtn">Оспорить! (голосование)</button>
+      </div>
+    </div>
+    <div id="modalStage2" class="hidden">
+      <div class="vote-progress" id="voteProgress">Голосует: Игрок 2</div>
+      <div class="subtext" id="voteWho">Игрок 2, ты веришь в этот объём?</div>
+      <div class="modal-btns">
+        <button class="primary" id="voteYes">Верю</button>
+        <button class="danger" id="voteNo">Не верю</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-// === ДАННЫЕ ===
-const LETTERS = 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЭЮЯ'.split('');
-const LETTER_VOLUME = 0.15; // литра на букву
-const NECK_LIMIT = 12; // макс букв через горлышко
-const TURN_TIME = 15; // секунд на ход
+(function(){
+  const LETTERS = ['А','Б','В','Г','Д','Е','Ж','З','И','К','Л','М','Н','О','П','Р','С','Т','У','Ф','Х','Ц','Ч','Ш','Щ','Э','Ю','Я'];
+  const MAX_LIVES = 3;
 
-let players = [];
-let gameMode = 'survival';
-let currentLetter = '';
-let jarCapacity = 5;
-let currentVolume = 0;
-let currentPlayerIndex = 0;
-let usedWords = new Set();
-let timerInterval = null;
-let timeLeft = TURN_TIME;
-let gameActive = false;
-let roundNumber = 1;
+  let state = null;
 
-// === УПРАВЛЕНИЕ ИГРОКАМИ ===
-function addPlayer() {
-  const input = document.getElementById('playerNameInput');
-  const name = input.value.trim();
-  if (!name) return;
-  if (players.find(p => p.name === name)) { alert('Такой игрок уже есть!'); return; }
-  if (players.length >= 12) { alert('Максимум 12 игроков!'); return; }
-  players.push({ name, score: 0, eliminated: false, words: [] });
-  input.value = '';
-  renderPlayersList();
-  document.getElementById('startBtn').disabled = players.length < 2;
-}
+  // ---------- SETUP SCREEN ----------
+  const setupScreen = document.getElementById('setupScreen');
+  const gameScreen = document.getElementById('gameScreen');
+  const endScreen = document.getElementById('endScreen');
+  const namesGrid = document.getElementById('namesGrid');
+  const countVal = document.getElementById('countVal');
+  let playerCount = 4;
+  let jarChoice = 'random';
 
-function removePlayer(name) {
-  players = players.filter(p => p.name !== name);
-  renderPlayersList();
-  document.getElementById('startBtn').disabled = players.length < 2;
-}
-
-function renderPlayersList() {
-  const box = document.getElementById('playersList');
-  box.innerHTML = players.map(p => 
-    `<span class="player-chip">${p.name} <span class="remove" onclick="removePlayer('${p.name}')">×</span></span>`
-  ).join('');
-}
-
-// === СТАРТ ИГРЫ ===
-function startGame() {
-  gameMode = document.getElementById('gameMode').value;
-  document.getElementById('startScreen').classList.remove('active');
-  document.getElementById('gameScreen').classList.add('active');
-  startRound();
-}
-
-function startRound() {
-  currentLetter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
-  jarCapacity = Math.random() < 0.5 ? 5 : 10;
-  currentVolume = 0;
-  currentPlayerIndex = 0;
-  usedWords.clear();
-  gameActive = true;
-  roundNumber++;
-
-  // Сброс визуала
-  document.getElementById('liquid').style.height = '0%';
-  document.getElementById('overflow').classList.remove('spill');
-  document.getElementById('volumeText').textContent = `0 / ${jarCapacity} л`;
-  document.getElementById('fillPercent').textContent = '0%';
-  document.getElementById('jarSize').textContent = jarCapacity + ' л';
-  document.getElementById('jarLabel').textContent = jarCapacity + ' литров';
-  document.getElementById('currentLetter').textContent = currentLetter;
-  document.getElementById('historyBox').innerHTML = '<div style="color:#666;text-align:center">История ходов появится здесь...</div>';
-
-  // Разметка делений
-  const linesBox = document.getElementById('measureLines');
-  linesBox.innerHTML = '';
-  const steps = jarCapacity === 5 ? 5 : 10;
-  for (let i = 0; i <= steps; i++) {
-    const line = document.createElement('div');
-    line.className = 'measure-line';
-    line.style.position = 'absolute';
-    line.style.bottom = (i / steps * 100) + '%';
-    line.style.width = '15px';
-    line.setAttribute('data-val', i + 'л');
-    linesBox.appendChild(line);
-  }
-
-  // Показ модалки
-  document.getElementById('modalLetter').textContent = currentLetter;
-  document.getElementById('modalLetterText').textContent = currentLetter;
-  document.getElementById('modalJar').textContent = jarCapacity + ' литров';
-  document.getElementById('roundModal').classList.add('active');
-
-  renderPlayersBar();
-}
-
-function closeRoundModal() {
-  document.getElementById('roundModal').classList.remove('active');
-  startTurn();
-}
-
-// === ХОД ===
-function getActivePlayers() {
-  return players.filter(p => !p.eliminated);
-}
-
-function startTurn() {
-  const active = getActivePlayers();
-  if (active.length === 0) { endGame(); return; }
-  if (active.length === 1 && gameMode === 'survival') { endGame(); return; }
-
-  // Найти следующего активного
-  while (players[currentPlayerIndex].eliminated) {
-    currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-  }
-
-  renderPlayersBar();
-  const input = document.getElementById('wordInput');
-  input.value = '';
-  input.disabled = false;
-  input.placeholder = `${players[currentPlayerIndex].name}, слово на «${currentLetter}»...`;
-  input.focus();
-  document.getElementById('submitBtn').disabled = false;
-
-  timeLeft = TURN_TIME;
-  updateTimer();
-  if (timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    timeLeft -= 0.1;
-    updateTimer();
-    if (timeLeft <= 0) {
-      clearInterval(timerInterval);
-      handleTimeout();
-    }
-  }, 100);
-}
-
-function updateTimer() {
-  const pct = Math.max(0, (timeLeft / TURN_TIME) * 100);
-  document.getElementById('timerFill').style.width = pct + '%';
-}
-
-function handleTimeout() {
-  const p = players[currentPlayerIndex];
-  addHistory(`⏱ ${p.name} не успел!`, 'timeout');
-  if (gameMode === 'survival') {
-    p.eliminated = true;
-    showToast(`${p.name} выбывает по таймауту!`);
-  }
-  nextTurn();
-}
-
-function submitWord() {
-  if (!gameActive) return;
-  const input = document.getElementById('wordInput');
-  const word = input.value.trim().toUpperCase();
-  const player = players[currentPlayerIndex];
-
-  if (!word) return;
-
-  // Валидация
-  if (word[0] !== currentLetter) {
-    shakeInput(); showToast(`Слово должно начинаться на «${currentLetter}»!`); return;
-  }
-  if (usedWords.has(word)) {
-    shakeInput(); showToast('Это слово уже было!'); return;
-  }
-  if (word.length > NECK_LIMIT) {
-    shakeInput(); showToast(`Слишком длинное! Максимум ${NECK_LIMIT} букв через горлышко.`);
-    if (gameMode === 'survival') {
-      player.eliminated = true;
-      showToast(`${player.name} выбывает! Слово не пролезло в горлышко.`);
-      nextTurn(); return;
+  function renderNameInputs(){
+    namesGrid.innerHTML = '';
+    for(let i=0;i<playerCount;i++){
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.placeholder = 'Игрок ' + (i+1);
+      inp.maxLength = 18;
+      inp.dataset.idx = i;
+      namesGrid.appendChild(inp);
     }
   }
+  renderNameInputs();
 
-  const wordVolume = word.length * LETTER_VOLUME;
+  document.getElementById('minus').addEventListener('click', ()=>{
+    if(playerCount>2){ playerCount--; countVal.textContent = playerCount; renderNameInputs(); }
+  });
+  document.getElementById('plus').addEventListener('click', ()=>{
+    if(playerCount<12){ playerCount++; countVal.textContent = playerCount; renderNameInputs(); }
+  });
 
-  // Проверка на перелив
-  if (currentVolume + wordVolume > jarCapacity) {
-    document.getElementById('overflow').classList.add('spill');
-    setTimeout(() => document.getElementById('overflow').classList.remove('spill'), 1000);
+  document.querySelectorAll('.chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      jarChoice = chip.dataset.jar;
+    });
+  });
 
-    if (gameMode === 'survival') {
-      player.eliminated = true;
-      showToast(`${player.name} перелил банку и выбывает!`);
-      addHistory(`💥 ${player.name}: «${word}» — ПЕРЕЛИВ!`, 'overflow');
-      nextTurn(); return;
+  document.getElementById('startBtn').addEventListener('click', startGame);
+
+  function startGame(){
+    const names = [];
+    namesGrid.querySelectorAll('input').forEach((inp,i)=>{
+      names.push(inp.value.trim() || ('Игрок ' + (i+1)));
+    });
+
+    let capacity;
+    if(jarChoice === '5') capacity = 5;
+    else if(jarChoice === '10') capacity = 10;
+    else capacity = Math.random() < 0.5 ? 5 : 10;
+
+    const letter = LETTERS[Math.floor(Math.random()*LETTERS.length)];
+
+    state = {
+      players: names.map(n=>({name:n, lives:MAX_LIVES})),
+      capacity: capacity,
+      filled: 0,
+      letter: letter,
+      usedWords: new Set(),
+      currentIdx: 0,
+      log: [],
+      pendingClaim: null,
+      voteQueue: [],
+      voteYes: 0,
+      voteNo: 0
+    };
+
+    setupScreen.classList.add('hidden');
+    endScreen.classList.add('hidden');
+    gameScreen.classList.remove('hidden');
+
+    document.getElementById('letterBadge').textContent = letter;
+    document.getElementById('hintLetter').textContent = letter;
+    document.getElementById('capNum').textContent = capacity;
+
+    renderAll();
+  }
+
+  // ---------- GAME RENDER ----------
+  const liquidEl = document.getElementById('liquid');
+  const filledNumEl = document.getElementById('filledNum');
+  const capNumEl = document.getElementById('capNum');
+  const livesRow = document.getElementById('livesRow');
+  const playersStrip = document.getElementById('playersStrip');
+  const turnWho = document.getElementById('turnWho');
+  const hintRemain = document.getElementById('hintRemain');
+  const logEl = document.getElementById('log');
+  const flashMsg = document.getElementById('flashMsg');
+
+  const JAR_TOP_Y = 150;
+  const JAR_BOTTOM_Y = 392;
+  const JAR_HEIGHT = JAR_BOTTOM_Y - JAR_TOP_Y;
+
+  function alivePlayers(){
+    return state.players.filter(p=>p.lives>0);
+  }
+
+  function currentPlayer(){
+    return state.players[state.currentIdx];
+  }
+
+  function nextTurn(){
+    if(alivePlayers().length <= 1) return;
+    let idx = state.currentIdx;
+    do{
+      idx = (idx+1) % state.players.length;
+    } while(state.players[idx].lives<=0);
+    state.currentIdx = idx;
+  }
+
+  function renderAll(){
+    // liquid
+    const pct = Math.min(1, state.filled / state.capacity);
+    const h = JAR_HEIGHT * pct;
+    liquidEl.setAttribute('y', JAR_BOTTOM_Y - h);
+    liquidEl.setAttribute('height', h);
+
+    filledNumEl.textContent = state.filled.toFixed(1).replace(/\.0$/,'');
+    capNumEl.textContent = state.capacity;
+    hintRemain.textContent = (state.capacity - state.filled).toFixed(1).replace(/\.0$/,'');
+
+    // lives of current-turn-agnostic overview: show total remaining lives as dots per player? show current player's lives
+    livesRow.innerHTML = '';
+    const cp = currentPlayer();
+    for(let i=0;i<MAX_LIVES;i++){
+      const d = document.createElement('div');
+      d.className = 'life-dot' + (i<cp.lives ? ' on' : '');
+      livesRow.appendChild(d);
+    }
+
+    // players strip
+    playersStrip.innerHTML = '';
+    state.players.forEach((p,i)=>{
+      const pill = document.createElement('div');
+      pill.className = 'player-pill' + (i===state.currentIdx && p.lives>0 ? ' active':'') + (p.lives<=0 ? ' out':'');
+      pill.textContent = p.name + ' ' + '♥'.repeat(Math.max(p.lives,0));
+      playersStrip.appendChild(pill);
+    });
+
+    turnWho.textContent = 'Ход: ' + cp.name;
+
+    // log
+    logEl.innerHTML = '';
+    state.log.slice().reverse().forEach(item=>{
+      const row = document.createElement('div');
+      row.className = 'log-item ' + (item.accepted ? 'acc' : 'rej');
+      row.innerHTML = '<span><span class="who">' + item.player + '</span> — ' + item.word + '</span>' +
+        '<span>' + (item.accepted ? ('<span class="vol">+' + item.vol.toFixed(1).replace(/\.0$/,'') + ' л</span>') : ('<span style="color:var(--danger)">' + item.reason + '</span>')) + '</span>';
+      logEl.appendChild(row);
+    });
+  }
+
+  function showFlash(msg, type){
+    flashMsg.textContent = msg;
+    flashMsg.className = 'flash show ' + type;
+    setTimeout(()=>{ flashMsg.className = 'flash'; }, 2600);
+  }
+
+  function normalizeFirstLetter(s){
+    let c = s.trim().charAt(0).toUpperCase();
+    if(c === 'Ё') c = 'Е';
+    return c;
+  }
+
+  function loseLife(player, reason){
+    player.lives--;
+    if(player.lives < 0) player.lives = 0;
+  }
+
+  function checkEndConditions(){
+    if(state.filled >= state.capacity - 0.0001){
+      endGame('full', currentPlayer());
+      return true;
+    }
+    const alive = alivePlayers();
+    if(alive.length <= 1){
+      endGame('lastStanding', alive[0] || null);
+      return true;
+    }
+    return false;
+  }
+
+  function endGame(type, winner){
+    gameScreen.classList.add('hidden');
+    endScreen.classList.remove('hidden');
+    const medal = document.getElementById('endMedal');
+    const title = document.getElementById('endTitle');
+    const text = document.getElementById('endText');
+    if(type === 'full'){
+      medal.textContent = '🏺';
+      title.textContent = winner.name + ' наполнил банку!';
+      text.textContent = 'Ровно ' + state.capacity + ' литров — банка полна до краёв. Победа!';
+    } else if(winner){
+      medal.textContent = '👑';
+      title.textContent = winner.name + ' — последний с жизнями!';
+      text.textContent = 'Все остальные выбыли. Банка так и осталась заполнена на ' + state.filled.toFixed(1).replace(/\.0$/,'') + ' из ' + state.capacity + ' литров.';
     } else {
-      // precision mode: штраф
-      player.score -= Math.round((currentVolume + wordVolume - jarCapacity) * 100);
-      showToast(`${player.name} перелил! Штраф.`);
+      medal.textContent = '🤷';
+      title.textContent = 'Ничья';
+      text.textContent = 'Все выбыли одновременно.';
     }
   }
 
-  // Успех
-  usedWords.add(word);
-  currentVolume += wordVolume;
-  player.words.push(word);
-  player.score += Math.round(wordVolume * 100);
+  document.getElementById('restartBtn').addEventListener('click', ()=>{
+    endScreen.classList.add('hidden');
+    setupScreen.classList.remove('hidden');
+  });
 
-  // Визуал
-  const fillPct = (currentVolume / jarCapacity) * 100;
-  document.getElementById('liquid').style.height = fillPct + '%';
-  document.getElementById('volumeText').textContent = `${currentVolume.toFixed(2)} / ${jarCapacity} л`;
-  document.getElementById('fillPercent').textContent = Math.round(fillPct) + '%';
+  // ---------- WORD SUBMISSION ----------
+  const wordInput = document.getElementById('wordInput');
+  const volInput = document.getElementById('volInput');
 
-  // Пузырьки
-  createBubbles(word.length);
+  document.getElementById('submitBtn').addEventListener('click', submitWord);
+  wordInput.addEventListener('keydown', e=>{ if(e.key==='Enter') volInput.focus(); });
+  volInput.addEventListener('keydown', e=>{ if(e.key==='Enter') submitWord(); });
 
-  addHistory(`${player.name}: «${word}» — +${wordVolume.toFixed(2)}л`, 'normal');
+  function submitWord(){
+    const word = wordInput.value.trim();
+    const vol = parseFloat(volInput.value);
+    const cp = currentPlayer();
 
-  // Точность — проверка победы
-  if (gameMode === 'precision' && Math.abs(currentVolume - jarCapacity) < 0.01) {
-    endGame(); return;
+    if(!word){
+      showFlash('Введи слово.', 'error');
+      return;
+    }
+    if(normalizeFirstLetter(word) !== state.letter){
+      showFlash('Слово должно начинаться на букву «' + state.letter + '». ' + cp.name + ' теряет жизнь!', 'error');
+      state.log.push({player:cp.name, word:word, accepted:false, reason:'не та буква'});
+      loseLife(cp, 'letter');
+      afterInvalid();
+      return;
+    }
+    if(state.usedWords.has(word.toLowerCase())){
+      showFlash('Это слово уже называли. ' + cp.name + ' теряет жизнь!', 'error');
+      state.log.push({player:cp.name, word:word, accepted:false, reason:'повтор слова'});
+      loseLife(cp, 'repeat');
+      afterInvalid();
+      return;
+    }
+    if(!vol || vol<=0){
+      showFlash('Укажи объём в литрах (больше нуля).', 'error');
+      return;
+    }
+    const remaining = state.capacity - state.filled;
+    if(vol > remaining + 0.0001){
+      showFlash('Столько уже не влезет — свободно только ' + remaining.toFixed(1).replace(/\.0$/,'') + ' л. ' + cp.name + ' теряет жизнь!', 'error');
+      state.log.push({player:cp.name, word:word, accepted:false, reason:'не влезает'});
+      loseLife(cp, 'overflow');
+      afterInvalid();
+      return;
+    }
+
+    // valid claim -> open challenge modal
+    state.pendingClaim = {word, vol, player: cp};
+    openChallengeModal(word, vol);
   }
 
-  nextTurn();
-}
-
-function nextTurn() {
-  clearInterval(timerInterval);
-  document.getElementById('wordInput').disabled = true;
-  document.getElementById('submitBtn').disabled = true;
-
-  // Проверка конца
-  const active = getActivePlayers();
-  if (active.length === 0) { endGame(); return; }
-  if (active.length === 1 && gameMode === 'survival') { endGame(); return; }
-  if (currentVolume >= jarCapacity && gameMode === 'survival') { endGame(); return; }
-
-  currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-  setTimeout(startTurn, 1000);
-}
-
-// === ВИЗУАЛ ===
-function renderPlayersBar() {
-  const bar = document.getElementById('playersBar');
-  bar.innerHTML = players.map((p, i) => {
-    const isActive = i === currentPlayerIndex && !p.eliminated && gameActive;
-    const cls = isActive ? 'active' : (p.eliminated ? 'eliminated' : '');
-    return `<div class="player-card ${cls}">
-      <div class="p-name">${p.name}</div>
-      <div class="p-score">${p.eliminated ? '❌' : p.score + ' очков'}</div>
-    </div>`;
-  }).join('');
-}
-
-function createBubbles(count) {
-  const jar = document.getElementById('jar');
-  for (let i = 0; i < Math.min(count, 8); i++) {
-    const b = document.createElement('div');
-    b.className = 'bubble';
-    b.style.width = (4 + Math.random() * 8) + 'px';
-    b.style.height = b.style.width;
-    b.style.left = (20 + Math.random() * 60) + '%';
-    b.style.bottom = (10 + Math.random() * 30) + '%';
-    b.style.animationDuration = (1 + Math.random() * 2) + 's';
-    jar.appendChild(b);
-    setTimeout(() => b.remove(), 2500);
+  function afterInvalid(){
+    wordInput.value = '';
+    volInput.value = '';
+    if(checkEndConditions()){ return; }
+    nextTurn();
+    renderAll();
   }
-}
 
-function addHistory(text, type) {
-  const box = document.getElementById('historyBox');
-  if (box.children.length === 1 && box.children[0].style.color === 'rgb(102, 102, 102)') {
-    box.innerHTML = '';
+  // ---------- CHALLENGE MODAL ----------
+  const overlay = document.getElementById('overlay');
+  const modalStage1 = document.getElementById('modalStage1');
+  const modalStage2 = document.getElementById('modalStage2');
+  const claimWordEl = document.getElementById('claimWord');
+  const claimVolEl = document.getElementById('claimVol');
+  const voteProgress = document.getElementById('voteProgress');
+  const voteWho = document.getElementById('voteWho');
+
+  function openChallengeModal(word, vol){
+    claimWordEl.textContent = word;
+    claimVolEl.textContent = '≈ ' + vol.toFixed(1).replace(/\.0$/,'') + ' л заявлено';
+    modalStage1.classList.remove('hidden');
+    modalStage2.classList.add('hidden');
+    overlay.classList.add('show');
   }
-  const div = document.createElement('div');
-  div.className = 'history-item pop';
-  let color = '#fff';
-  if (type === 'overflow') color = '#e94560';
-  if (type === 'timeout') color = '#888';
-  div.style.color = color;
-  div.textContent = text;
-  box.insertBefore(div, box.firstChild);
-}
 
-function shakeInput() {
-  const input = document.getElementById('wordInput');
-  input.classList.add('shake');
-  setTimeout(() => input.classList.remove('shake'), 500);
-}
+  document.getElementById('acceptAllBtn').addEventListener('click', ()=>{
+    resolveClaim(true, 'все поверили');
+  });
 
-function showToast(msg) {
-  // Простой алерт-заменитель через временный div
-  const div = document.createElement('div');
-  div.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(233,69,96,0.95);color:#fff;padding:12px 24px;border-radius:12px;font-weight:700;z-index:200;animation:pop 0.3s ease;';
-  div.textContent = msg;
-  document.body.appendChild(div);
-  setTimeout(() => { div.style.opacity = '0'; div.style.transition = '0.5s'; setTimeout(() => div.remove(), 500); }, 2500);
-}
+  document.getElementById('challengeBtn').addEventListener('click', ()=>{
+    const claimant = state.pendingClaim.player;
+    state.voteQueue = state.players.filter(p=>p!==claimant && p.lives>0);
+    state.voteYes = 0;
+    state.voteNo = 0;
+    modalStage1.classList.add('hidden');
+    modalStage2.classList.remove('hidden');
+    nextVoter();
+  });
 
-// === КОНЕЦ ИГРЫ ===
-function endGame() {
-  gameActive = false;
-  clearInterval(timerInterval);
+  function nextVoter(){
+    if(state.voteQueue.length === 0){
+      const believed = state.voteYes >= state.voteNo;
+      resolveClaim(believed, believed ? ('голосование: ' + state.voteYes + '–' + state.voteNo) : ('не поверили ' + state.voteNo + '–' + state.voteYes));
+      return;
+    }
+    const voter = state.voteQueue[0];
+    voteProgress.textContent = 'Осталось голосов: ' + state.voteQueue.length;
+    voteWho.textContent = voter.name + ', ты веришь, что «' + state.pendingClaim.word + '» займёт ' + state.pendingClaim.vol.toFixed(1).replace(/\.0$/,'') + ' л?';
+  }
 
-  let winner, text;
-  const active = getActivePlayers();
+  document.getElementById('voteYes').addEventListener('click', ()=>{
+    state.voteYes++;
+    state.voteQueue.shift();
+    nextVoter();
+  });
+  document.getElementById('voteNo').addEventListener('click', ()=>{
+    state.voteNo++;
+    state.voteQueue.shift();
+    nextVoter();
+  });
 
-  if (gameMode === 'survival') {
-    if (active.length === 1) {
-      winner = active[0];
-      text = `${winner.name} победил, оставшись последним!`;
-    } else if (active.length === 0) {
-      text = 'Все выбыли! Ничья.';
+  function resolveClaim(accepted, reasonLabel){
+    overlay.classList.remove('show');
+    const {word, vol, player} = state.pendingClaim;
+    state.usedWords.add(word.toLowerCase());
+
+    if(accepted){
+      state.filled = Math.min(state.capacity, state.filled + vol);
+      state.log.push({player: player.name, word: word, accepted:true, vol: vol});
+      showFlash('«' + word + '» пошло в банку (+' + vol.toFixed(1).replace(/\.0$/,'') + ' л). ' + reasonLabel + '.', 'ok');
     } else {
-      // Осталось несколько, банка полна
-      winner = active.reduce((a, b) => a.score > b.score ? a : b);
-      text = `${winner.name} победил по очкам!`;
+      loseLife(player, 'challenge');
+      state.log.push({player: player.name, word: word, accepted:false, reason:'не поверили'});
+      showFlash('Банка не поверила! ' + player.name + ' теряет жизнь.', 'error');
     }
-  } else {
-    winner = players.reduce((a, b) => a.score > b.score ? a : b);
-    const diff = Math.abs(currentVolume - jarCapacity).toFixed(2);
-    text = `${winner.name} набрал больше всего очков!<br>Банка заполнена на ${currentVolume.toFixed(2)}л из ${jarCapacity}л (разница ${diff}л)`;
+
+    wordInput.value = '';
+    volInput.value = '';
+
+    if(checkEndConditions()){ return; }
+    nextTurn();
+    renderAll();
+    wordInput.focus();
   }
 
-  document.getElementById('resultTitle').textContent = winner ? '🏆 ' + winner.name + ' победил!' : 'Игра окончена!';
-  document.getElementById('resultText').innerHTML = text;
-  document.getElementById('resultModal').classList.add('active');
-}
+})();
 </script>
 </body>
 </html>
