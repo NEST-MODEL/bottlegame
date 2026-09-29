@@ -1,125 +1,176 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formula - Личный кабинет менеджера</title>
+    <title>FORMULA - Личный Кабинет Менеджера</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        formula: {
+                            yellow: '#FACC15', // Amber/Yellow
+                            yellowHover: '#EAB308',
+                            dark: '#09090B', // Zinc 950
+                            card: '#18181B', // Zinc 900
+                            border: '#27272A', // Zinc 800
+                            muted: '#A1A1AA'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <!-- Vue 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <style>
-        body { background-color: #f3f4f6; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: #09090B; color: #F4F4F5; font-family: 'Segoe UI', system-ui, sans-serif; }
         .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
         .fade-enter-from, .fade-leave-to { opacity: 0; }
-        /* Custom scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar-track { background: #09090B; }
+        ::-webkit-scrollbar-thumb { background: #27272A; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #FACC15; }
     </style>
 </head>
-<body class="text-gray-800 h-screen flex overflow-hidden">
+<body class="h-screen flex overflow-hidden">
     <div id="app" class="flex w-full h-full" v-cloak>
 
         <!-- Sidebar -->
-        <aside class="w-64 bg-slate-900 text-white flex flex-col transition-all">
-            <div class="p-5 flex items-center gap-3 border-b border-slate-800">
-                <div class="w-8 h-8 rounded bg-blue-500 flex items-center justify-center font-bold text-lg">F</div>
-                <h1 class="text-xl font-bold tracking-wider">FORMULA</h1>
-            </div>
-            
-            <nav class="flex-1 p-4 space-y-2">
-                <button @click="currentView = 'dashboard'" :class="['w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left', currentView === 'dashboard' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white']">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                    Главная
-                </button>
-                <button @click="currentView = 'clients'" :class="['w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left', currentView === 'clients' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white']">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                    База клиентов
-                </button>
-                <button @click="currentView = 'stats'" :class="['w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left', currentView === 'stats' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white']">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                    Аналитика
-                </button>
-                <button @click="currentView = 'settings'" :class="['w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left', currentView === 'settings' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white']">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    Настройки цен
-                </button>
-            </nav>
+        <aside class="w-64 bg-formula-card border-r border-formula-border flex flex-col justify-between transition-all">
+            <div>
+                <!-- Brand Header -->
+                <div class="p-5 flex items-center justify-between border-b border-formula-border">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-formula-yellow text-formula-dark flex items-center justify-center font-black text-xl shadow-[0_0_15px_rgba(250,204,21,0.4)]">
+                            F
+                        </div>
+                        <div>
+                            <h1 class="text-lg font-bold tracking-wider text-white leading-none">FORMULA</h1>
+                            <span class="text-[10px] text-formula-yellow font-medium uppercase tracking-widest">Sales Assistant</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cloud Sync Status Badge -->
+                <div class="px-4 pt-3">
+                    <div :class="['px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-between border', isCloudActive ? 'bg-amber-500/10 text-formula-yellow border-formula-yellow/30' : 'bg-zinc-800 text-zinc-400 border-zinc-700']">
+                        <span class="flex items-center gap-2">
+                            <span :class="['w-2 h-2 rounded-full', isCloudActive ? 'bg-formula-yellow animate-pulse' : 'bg-zinc-500']"></span>
+                            {{ isCloudActive ? 'Облако (Firebase)' : 'Локально' }}
+                        </span>
+                        <button @click="currentView = 'settings'" class="underline text-[10px]">настроить</button>
+                    </div>
+                </div>
 
-            <div class="p-4">
-                <button @click="openQuickAdd" class="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    Добавить клиента
+                <!-- Navigation -->
+                <nav class="p-4 space-y-2">
+                    <button @click="currentView = 'dashboard'" :class="['w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-left', currentView === 'dashboard' ? 'bg-formula-yellow text-formula-dark font-bold shadow-[0_0_10px_rgba(250,204,21,0.2)]' : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-white']">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        Главная
+                    </button>
+                    <button @click="currentView = 'clients'" :class="['w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-left', currentView === 'clients' ? 'bg-formula-yellow text-formula-dark font-bold shadow-[0_0_10px_rgba(250,204,21,0.2)]' : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-white']">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        База клиентов
+                    </button>
+                    <button @click="currentView = 'stats'" :class="['w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-left', currentView === 'stats' ? 'bg-formula-yellow text-formula-dark font-bold shadow-[0_0_10px_rgba(250,204,21,0.2)]' : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-white']">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        Аналитика
+                    </button>
+                    <button @click="currentView = 'settings'" :class="['w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-left', currentView === 'settings' ? 'bg-formula-yellow text-formula-dark font-bold shadow-[0_0_10px_rgba(250,204,21,0.2)]' : 'text-zinc-400 hover:bg-zinc-800/60 hover:text-white']">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+                        Настройки
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Add Button -->
+            <div class="p-4 border-t border-formula-border">
+                <button @click="openQuickAdd" class="w-full bg-formula-yellow hover:bg-formula-yellowHover text-formula-dark font-black py-3.5 px-4 rounded-xl shadow-[0_0_15px_rgba(250,204,21,0.3)] transition-all flex items-center justify-center gap-2 uppercase tracking-wide text-sm">
+                    <svg class="w-5 h-5 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                    + Добавить
                 </button>
             </div>
         </aside>
 
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden bg-formula-dark relative">
             
             <!-- Dashboard View -->
             <div v-if="currentView === 'dashboard'" class="flex-1 overflow-auto p-8">
-                <h2 class="text-2xl font-bold text-slate-800 mb-6">Сводка (Главная)</h2>
+                <h2 class="text-2xl font-black text-white mb-6 uppercase tracking-wider flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-formula-yellow inline-block"></span>
+                    Сводка обзвона
+                </h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                    <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
-                        <div class="text-sm text-slate-500 mb-1">Всего клиентов</div>
-                        <div class="text-3xl font-bold text-slate-800">{{ clients.length }}</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-formula-card p-5 rounded-2xl border border-formula-border">
+                        <div class="text-xs text-formula-muted uppercase tracking-wider mb-1">Всего клиентов</div>
+                        <div class="text-3xl font-black text-white">{{ clients.length }}</div>
                     </div>
-                    <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
-                        <div class="text-sm text-slate-500 mb-1">Надо перезвонить</div>
-                        <div class="text-3xl font-bold text-orange-500">{{ stats.needRecallCount }}</div>
+                    <div class="bg-formula-card p-5 rounded-2xl border border-formula-border">
+                        <div class="text-xs text-formula-muted uppercase tracking-wider mb-1">Перезвонить сегодня</div>
+                        <div class="text-3xl font-black text-formula-yellow">{{ stats.needRecallCount }}</div>
                     </div>
-                    <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
-                        <div class="text-sm text-slate-500 mb-1">Абонементов продано</div>
-                        <div class="text-3xl font-bold text-blue-600">{{ stats.soldCount }}</div>
+                    <div class="bg-formula-card p-5 rounded-2xl border border-formula-border">
+                        <div class="text-xs text-formula-muted uppercase tracking-wider mb-1">Продано абонементов</div>
+                        <div class="text-3xl font-black text-emerald-400">{{ stats.soldCount }}</div>
                     </div>
-                    <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
-                        <div class="text-sm text-slate-500 mb-1">Потенциальная сумма</div>
-                        <div class="text-3xl font-bold text-slate-700">{{ formatMoney(stats.potentialSum) }}</div>
+                    <div class="bg-formula-card p-5 rounded-2xl border border-formula-border">
+                        <div class="text-xs text-formula-muted uppercase tracking-wider mb-1">Потенциал в базе</div>
+                        <div class="text-3xl font-black text-zinc-300">{{ formatMoney(stats.potentialSum) }}</div>
                     </div>
                 </div>
 
+                <!-- Sales Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    <div class="bg-gradient-to-br from-green-500 to-green-600 p-5 rounded-xl shadow-sm text-white">
-                        <div class="text-green-100 text-sm mb-1">Фактические продажи (Всего)</div>
-                        <div class="text-3xl font-bold">{{ formatMoney(stats.actualSum) }}</div>
+                    <div class="bg-gradient-to-br from-zinc-900 to-zinc-950 p-6 rounded-2xl border border-formula-yellow/40 shadow-lg relative overflow-hidden">
+                        <div class="text-xs text-formula-yellow uppercase font-bold tracking-widest mb-1">Фактические продажи (Всего)</div>
+                        <div class="text-3xl font-black text-white">{{ formatMoney(stats.actualSum) }}</div>
                     </div>
-                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-5 rounded-xl shadow-sm text-white">
-                        <div class="text-blue-100 text-sm mb-1">Продажи (За текущий месяц)</div>
-                        <div class="text-3xl font-bold">{{ formatMoney(stats.salesThisMonth) }}</div>
+                    <div class="bg-zinc-900 p-6 rounded-2xl border border-formula-border">
+                        <div class="text-xs text-formula-muted uppercase font-bold tracking-widest mb-1">Продажи за этот месяц</div>
+                        <div class="text-3xl font-black text-formula-yellow">{{ formatMoney(stats.salesThisMonth) }}</div>
                     </div>
-                    <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 p-5 rounded-xl shadow-sm text-white">
-                        <div class="text-indigo-100 text-sm mb-1">Продажи (Сегодня)</div>
-                        <div class="text-3xl font-bold">{{ formatMoney(stats.salesToday) }}</div>
+                    <div class="bg-zinc-900 p-6 rounded-2xl border border-formula-border">
+                        <div class="text-xs text-formula-muted uppercase font-bold tracking-widest mb-1">Продажи за сегодня</div>
+                        <div class="text-3xl font-black text-emerald-400">{{ formatMoney(stats.salesToday) }}</div>
                     </div>
                 </div>
 
-                <h3 class="text-xl font-bold text-slate-800 mb-4">Кому перезвонить сегодня ({{ clientsToRecallToday.length }})</h3>
-                <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div v-if="clientsToRecallToday.length === 0" class="p-8 text-center text-slate-500">
-                        На сегодня запланированных звонков нет. Вы молодец!
+                <!-- Recall List -->
+                <h3 class="text-lg font-bold text-white mb-4 uppercase tracking-wider">Кому перезвонить сегодня ({{ clientsToRecallToday.length }})</h3>
+                <div class="bg-formula-card rounded-2xl border border-formula-border overflow-hidden">
+                    <div v-if="clientsToRecallToday.length === 0" class="p-8 text-center text-formula-muted">
+                        На сегодня перезвонов нет. Все звонки сделаны!
                     </div>
                     <table v-else class="w-full text-left">
-                        <thead class="bg-slate-50 text-slate-500 text-sm">
+                        <thead class="bg-zinc-950 text-formula-muted text-xs uppercase tracking-wider">
                             <tr>
-                                <th class="py-3 px-4 font-medium">Имя</th>
-                                <th class="py-3 px-4 font-medium">Телефон</th>
-                                <th class="py-3 px-4 font-medium">Статус</th>
-                                <th class="py-3 px-4 font-medium">Интерес</th>
-                                <th class="py-3 px-4 font-medium text-right">Действие</th>
+                                <th class="py-3.5 px-4 font-bold">Имя</th>
+                                <th class="py-3.5 px-4 font-bold">Телефон</th>
+                                <th class="py-3.5 px-4 font-bold">Статус</th>
+                                <th class="py-3.5 px-4 font-bold">Абонемент</th>
+                                <th class="py-3.5 px-4 font-bold text-right">Действие</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr v-for="c in clientsToRecallToday" :key="c.id" class="border-t border-slate-100 hover:bg-slate-50 transition">
-                                <td class="py-3 px-4 font-medium">{{ c.name }}</td>
-                                <td class="py-3 px-4 text-slate-600">{{ c.phone }}</td>
-                                <td class="py-3 px-4"><span class="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-medium">{{ c.status }}</span></td>
-                                <td class="py-3 px-4 text-slate-600">{{ getPlanName(c.planId) || '—' }}</td>
-                                <td class="py-3 px-4 text-right">
-                                    <button @click="openClient(c)" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Открыть карточку</button>
+                        <tbody class="divide-y divide-formula-border text-sm">
+                            <tr v-for="c in clientsToRecallToday" :key="c.id" class="hover:bg-zinc-800/40 transition">
+                                <td class="py-3.5 px-4 font-bold text-white">{{ c.name }}</td>
+                                <td class="py-3.5 px-4 text-zinc-300 font-mono">{{ c.phone }}</td>
+                                <td class="py-3.5 px-4">
+                                    <span :class="['px-2.5 py-1 rounded-md text-xs font-bold uppercase', getStatusStyle(c.status)]">{{ c.status }}</span>
+                                </td>
+                                <td class="py-3.5 px-4 text-zinc-400">{{ getPlanName(c.planId) || '—' }}</td>
+                                <td class="py-3.5 px-4 text-right space-x-2">
+                                    <button @click="openClient(c)" class="bg-formula-yellow/10 hover:bg-formula-yellow text-formula-yellow hover:text-formula-dark px-3 py-1.5 rounded-lg text-xs font-bold transition">Карточка</button>
                                 </td>
                             </tr>
                         </tbody>
@@ -129,62 +180,63 @@
 
             <!-- Clients List View -->
             <div v-if="currentView === 'clients'" class="flex-1 flex flex-col overflow-hidden">
-                <div class="p-6 pb-0 flex flex-col md:flex-row gap-4 justify-between items-center bg-white border-b border-slate-200">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-4 md:mb-0">База клиентов</h2>
-                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto pb-4">
-                        <input v-model="filters.search" type="text" placeholder="Поиск (Имя, Телефон)..." class="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-64">
+                <div class="p-6 pb-4 flex flex-col md:flex-row gap-4 justify-between items-center border-b border-formula-border bg-formula-card">
+                    <h2 class="text-2xl font-black text-white uppercase tracking-wider">База клиентов</h2>
+                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <input v-model="filters.search" type="text" placeholder="Поиск (Имя, Телефон)..." class="px-4 py-2 bg-zinc-950 border border-formula-border rounded-xl focus:outline-none focus:border-formula-yellow text-sm text-white w-full md:w-64">
                         
-                        <select v-model="filters.status" class="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        <select v-model="filters.status" class="px-4 py-2 bg-zinc-950 border border-formula-border rounded-xl focus:outline-none focus:border-formula-yellow text-sm text-white">
                             <option value="">Все статусы</option>
                             <option v-for="s in settings.statuses" :value="s">{{s}}</option>
                         </select>
                         
-                        <select v-model="filters.plan" class="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        <select v-model="filters.plan" class="px-4 py-2 bg-zinc-950 border border-formula-border rounded-xl focus:outline-none focus:border-formula-yellow text-sm text-white">
                             <option value="">Все абонементы</option>
                             <option v-for="(p, id) in settings.plans" :value="id">{{p.name}}</option>
                         </select>
 
-                        <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer bg-slate-100 px-3 py-2 rounded-lg hover:bg-slate-200 transition">
-                            <input type="checkbox" v-model="filters.recallToday" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
+                        <label class="flex items-center gap-2 text-xs font-bold text-zinc-300 cursor-pointer bg-zinc-950 px-3 py-2.5 rounded-xl border border-formula-border hover:border-formula-yellow/50 transition">
+                            <input type="checkbox" v-model="filters.recallToday" class="accent-formula-yellow w-4 h-4">
                             Перезвонить сегодня
                         </label>
                     </div>
                 </div>
 
-                <div class="flex-1 overflow-auto p-6 bg-slate-50">
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="flex-1 overflow-auto p-6">
+                    <div class="bg-formula-card rounded-2xl border border-formula-border overflow-hidden">
                         <table class="w-full text-left whitespace-nowrap">
-                            <thead class="bg-slate-100 text-slate-600 text-sm">
+                            <thead class="bg-zinc-950 text-formula-muted text-xs uppercase tracking-wider">
                                 <tr>
-                                    <th class="py-3 px-4 font-medium">Имя</th>
-                                    <th class="py-3 px-4 font-medium">Телефон</th>
-                                    <th class="py-3 px-4 font-medium">Статус</th>
-                                    <th class="py-3 px-4 font-medium">Интерес</th>
-                                    <th class="py-3 px-4 font-medium">След. звонок</th>
-                                    <th class="py-3 px-4 font-medium text-right">Действие</th>
+                                    <th class="py-3.5 px-4 font-bold">Имя</th>
+                                    <th class="py-3.5 px-4 font-bold">Телефон</th>
+                                    <th class="py-3.5 px-4 font-bold">Статус</th>
+                                    <th class="py-3.5 px-4 font-bold">Интерес</th>
+                                    <th class="py-3.5 px-4 font-bold">След. звонок</th>
+                                    <th class="py-3.5 px-4 font-bold text-right">Связь</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="divide-y divide-formula-border text-sm">
                                 <tr v-if="filteredClients.length === 0">
-                                    <td colspan="6" class="py-8 text-center text-slate-500">Клиенты не найдены</td>
+                                    <td colspan="6" class="py-8 text-center text-formula-muted">Клиенты не найдены</td>
                                 </tr>
-                                <tr v-for="c in filteredClients" :key="c.id" class="border-t border-slate-100 hover:bg-blue-50 transition cursor-pointer" @click="openClient(c)">
-                                    <td class="py-3 px-4 font-medium text-slate-800">{{ c.name }}</td>
-                                    <td class="py-3 px-4 text-slate-600">{{ c.phone }}</td>
-                                    <td class="py-3 px-4">
-                                        <span :class="['px-2 py-1 rounded text-xs font-medium', getStatusColor(c.status)]">
+                                <tr v-for="c in filteredClients" :key="c.id" class="hover:bg-zinc-800/40 transition cursor-pointer" @click="openClient(c)">
+                                    <td class="py-3.5 px-4 font-bold text-white">{{ c.name }}</td>
+                                    <td class="py-3.5 px-4 font-mono text-zinc-300">{{ c.phone }}</td>
+                                    <td class="py-3.5 px-4">
+                                        <span :class="['px-2.5 py-1 rounded-md text-xs font-bold uppercase', getStatusStyle(c.status)]">
                                             {{ c.status }}
                                         </span>
                                     </td>
-                                    <td class="py-3 px-4 text-slate-600">{{ getPlanName(c.planId) || '—' }}</td>
-                                    <td class="py-3 px-4 text-slate-600">
-                                        <span v-if="c.recallDate" :class="{'text-orange-600 font-medium': isToday(c.recallDate), 'text-red-600 font-medium': isPast(c.recallDate)}">
+                                    <td class="py-3.5 px-4 text-zinc-400">{{ getPlanName(c.planId) || '—' }}</td>
+                                    <td class="py-3.5 px-4">
+                                        <span v-if="c.recallDate" :class="{'text-formula-yellow font-bold': isToday(c.recallDate), 'text-red-400 font-bold': isPast(c.recallDate), 'text-zinc-400': !isToday(c.recallDate) && !isPast(c.recallDate)}">
                                             {{ formatDate(c.recallDate) }}
                                         </span>
-                                        <span v-else class="text-slate-400">—</span>
+                                        <span v-else class="text-zinc-600">—</span>
                                     </td>
-                                    <td class="py-3 px-4 text-right">
-                                        <svg class="w-5 h-5 text-slate-400 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    <td class="py-3.5 px-4 text-right space-x-2" @click.stop>
+                                        <button @click="openMessenger(c.phone, 'whatsapp')" class="bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-black px-2.5 py-1 rounded-lg text-xs font-bold transition">WA</button>
+                                        <button @click="openMessenger(c.phone, 'telegram')" class="bg-sky-500/20 hover:bg-sky-500 text-sky-400 hover:text-black px-2.5 py-1 rounded-lg text-xs font-bold transition">TG</button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -194,128 +246,144 @@
             </div>
 
             <!-- Client Detail View -->
-            <div v-if="currentView === 'client-detail' && activeClient" class="flex-1 overflow-auto p-6 bg-slate-50">
-                <button @click="currentView = 'clients'" class="mb-4 text-slate-500 hover:text-slate-800 flex items-center gap-1 font-medium transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                    Назад к списку
-                </button>
+            <div v-if="currentView === 'client-detail' && activeClient" class="flex-1 overflow-auto p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <button @click="currentView = 'clients'" class="text-formula-muted hover:text-white flex items-center gap-2 font-bold text-sm transition uppercase tracking-wider">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        К списку клиентов
+                    </button>
+                    
+                    <!-- Fast Action Messengers -->
+                    <div class="flex items-center gap-2">
+                        <button @click="copyProposal" class="bg-formula-yellow text-formula-dark hover:bg-formula-yellowHover px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider shadow-[0_0_10px_rgba(250,204,21,0.2)] transition flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            Скопировать КП
+                        </button>
+                        <button @click="openMessenger(activeClient.phone, 'whatsapp')" class="bg-emerald-500 hover:bg-emerald-600 text-black px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5">
+                            WhatsApp
+                        </button>
+                        <button @click="openMessenger(activeClient.phone, 'telegram')" class="bg-sky-500 hover:bg-sky-600 text-black px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition flex items-center gap-1.5">
+                            Telegram
+                        </button>
+                    </div>
+                </div>
 
                 <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                    <!-- Left Col: Form -->
+                    <!-- Left: Main Form -->
                     <div class="xl:col-span-2 space-y-6">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <div class="bg-formula-card p-6 rounded-2xl border border-formula-border">
                             <div class="flex justify-between items-start mb-6">
-                                <h2 class="text-2xl font-bold text-slate-800">Карточка клиента</h2>
-                                <button @click="deleteClient(activeClient.id)" class="text-red-500 hover:text-red-700 text-sm font-medium transition">Удалить клиента</button>
+                                <h2 class="text-xl font-black text-white uppercase tracking-wider">Карточка клиента</h2>
+                                <button @click="deleteClient(activeClient.id)" class="text-red-500 hover:text-red-400 text-xs font-bold uppercase transition">Удалить</button>
                             </div>
                             
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Имя</label>
-                                    <input type="text" v-model="activeClient.name" @change="saveData" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <label class="block text-xs font-bold text-formula-muted uppercase tracking-wider mb-1">Имя</label>
+                                    <input type="text" v-model="activeClient.name" @change="saveData" class="w-full px-4 py-2.5 bg-zinc-950 border border-formula-border rounded-xl focus:outline-none focus:border-formula-yellow text-white">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Телефон</label>
-                                    <input type="text" v-model="activeClient.phone" @change="saveData" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <label class="block text-xs font-bold text-formula-muted uppercase tracking-wider mb-1">Телефон</label>
+                                    <input type="text" v-model="activeClient.phone" @change="saveData" class="w-full px-4 py-2.5 bg-zinc-950 border border-formula-border rounded-xl focus:outline-none focus:border-formula-yellow text-white font-mono">
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Статус</label>
-                                    <select v-model="activeClient.status" @change="handleStatusChange" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                                    <label class="block text-xs font-bold text-formula-muted uppercase tracking-wider mb-1">Статус</label>
+                                    <select v-model="activeClient.status" @change="handleStatusChange" class="w-full px-4 py-2.5 bg-zinc-950 border border-formula-border rounded-xl focus:outline-none focus:border-formula-yellow text-white font-bold">
                                         <option v-for="s in settings.statuses" :value="s">{{s}}</option>
                                     </select>
-                                    <p v-if="activeClient.status === 'Купил'" class="text-xs text-green-600 mt-1 font-medium">✅ Сумма добавлена в фактические продажи</p>
+                                    <p v-if="activeClient.status === 'Купил'" class="text-[11px] text-emerald-400 mt-1 font-bold">✔ Учтено в фактических продажах</p>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Дата следующего звонка</label>
-                                    <input type="date" v-model="activeClient.recallDate" @change="saveData" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <label class="block text-xs font-bold text-formula-muted uppercase tracking-wider mb-1">Дата следующего звонка</label>
+                                    <input type="date" v-model="activeClient.recallDate" @change="saveData" class="w-full px-4 py-2.5 bg-zinc-950 border border-formula-border rounded-xl focus:outline-none focus:border-formula-yellow text-white">
                                 </div>
 
                                 <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Интересующий абонемент</label>
-                                    <select v-model="activeClient.planId" @change="saveData" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <label class="block text-xs font-bold text-formula-muted uppercase tracking-wider mb-1">Выбранный абонемент</label>
+                                    <select v-model="activeClient.planId" @change="saveData" class="w-full px-4 py-2.5 bg-zinc-950 border border-formula-border rounded-xl focus:outline-none focus:border-formula-yellow text-white">
                                         <option value="">Не выбрано</option>
-                                        <option v-for="(p, id) in settings.plans" :value="id">{{p.name}} (со скидкой: {{formatMoney(p.discount)}})</option>
+                                        <option v-for="(p, id) in settings.plans" :value="id">{{p.name}} (Со скидкой: {{formatMoney(p.discount)}})</option>
                                     </select>
                                 </div>
 
                                 <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Причина (почему не ходит / не покупает)</label>
-                                    <input type="text" v-model="activeClient.reasonNotAttending" @change="saveData" placeholder="Например: Сейчас в командировке" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <label class="block text-xs font-bold text-formula-muted uppercase tracking-wider mb-1">Причина (почему не ходит / не покупает)</label>
+                                    <input type="text" v-model="activeClient.reasonNotAttending" @change="saveData" placeholder="Например: Дорого / В командировке" class="w-full px-4 py-2.5 bg-zinc-950 border border-formula-border rounded-xl focus:outline-none focus:border-formula-yellow text-white">
                                 </div>
 
                                 <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Когда примерно готов(а)</label>
-                                    <input type="text" v-model="activeClient.whenReady" @change="saveData" placeholder="Например: В октябре" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <label class="block text-xs font-bold text-formula-muted uppercase tracking-wider mb-1">Когда примерно готов(а)</label>
+                                    <input type="text" v-model="activeClient.whenReady" @change="saveData" placeholder="Например: В следующем месяце" class="w-full px-4 py-2.5 bg-zinc-950 border border-formula-border rounded-xl focus:outline-none focus:border-formula-yellow text-white">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Right Col: Calculations & History -->
+                    <!-- Right: Calculations & History -->
                     <div class="space-y-6">
-                        <!-- Auto-Calculation Box -->
-                        <div v-if="activeClient.planId" class="bg-gradient-to-b from-slate-800 to-slate-900 rounded-xl shadow-lg border border-slate-700 p-6 text-white">
-                            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-                                <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                Расчёт абонемента
+                        <!-- Auto Calc Widget -->
+                        <div v-if="activeClient.planId" class="bg-gradient-to-b from-zinc-900 to-zinc-950 rounded-2xl border border-formula-yellow/40 p-6 text-white shadow-xl">
+                            <h3 class="text-sm font-black uppercase tracking-wider mb-4 text-formula-yellow flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                Расчёт условий Formula
                             </h3>
                             
                             <div class="space-y-3 text-sm">
-                                <div class="flex justify-between text-slate-300">
+                                <div class="flex justify-between text-zinc-400">
                                     <span>Срок:</span>
-                                    <span class="font-medium text-white">{{ selectedPlanDetails.months }} месяцев</span>
+                                    <span class="font-bold text-white">{{ selectedPlanDetails.months }} месяцев</span>
                                 </div>
-                                <div class="flex justify-between text-slate-300">
+                                <div class="flex justify-between text-zinc-400">
                                     <span>Обычная цена:</span>
                                     <span class="line-through">{{ formatMoney(selectedPlanDetails.regular) }}</span>
                                 </div>
                                 <div class="flex justify-between items-center text-lg">
-                                    <span class="text-slate-300">Цена со скидкой:</span>
-                                    <span class="font-bold text-green-400">{{ formatMoney(selectedPlanDetails.discount) }}</span>
+                                    <span class="text-zinc-300 font-bold">Цена со скидкой:</span>
+                                    <span class="font-black text-formula-yellow text-xl">{{ formatMoney(selectedPlanDetails.discount) }}</span>
                                 </div>
-                                <div class="flex justify-between text-slate-300">
+                                <div class="flex justify-between text-zinc-400">
                                     <span>Экономия:</span>
-                                    <span class="font-medium text-yellow-400">{{ formatMoney(selectedPlanDetails.regular - selectedPlanDetails.discount) }}</span>
+                                    <span class="font-bold text-emerald-400">{{ formatMoney(selectedPlanDetails.regular - selectedPlanDetails.discount) }}</span>
                                 </div>
                                 
-                                <hr class="border-slate-700 my-3">
-                                <div class="font-medium mb-2 text-slate-200">Бонусы:</div>
+                                <hr class="border-formula-border my-3">
+                                <div class="font-bold text-xs uppercase tracking-wider text-zinc-400 mb-2">Бонусы:</div>
                                 
-                                <ul class="space-y-2">
-                                    <li v-if="selectedPlanDetails.bonusMonths > 0" class="flex items-start gap-2">
-                                        <span class="text-green-400">✓</span>
-                                        <span>+{{ selectedPlanDetails.bonusMonths }} месяца в подарок</span>
+                                <ul class="space-y-2 text-xs">
+                                    <li v-if="selectedPlanDetails.bonusMonths > 0" class="flex items-center gap-2 text-formula-yellow font-bold">
+                                        <span>✔</span>
+                                        <span>+{{ selectedPlanDetails.bonusMonths }} месяца в подарок к абонементу</span>
                                     </li>
-                                    <li v-if="selectedPlanDetails.bonusBar" class="flex items-start gap-2">
-                                        <span class="text-green-400">✓</span>
-                                        <span>+1 месяц безлимитного бара</span>
+                                    <li v-if="selectedPlanDetails.bonusBar" class="flex items-center gap-2 text-formula-yellow font-bold">
+                                        <span>✔</span>
+                                        <span>+1 месяц безлимитного фитнес-бара</span>
                                     </li>
                                 </ul>
 
-                                <div v-if="selectedPlanDetails.bonusMonths > 0" class="mt-4 p-3 bg-slate-800 rounded border border-slate-600 font-medium text-center">
-                                    Итого посещение: {{ selectedPlanDetails.months + selectedPlanDetails.bonusMonths }} месяцев
+                                <div v-if="selectedPlanDetails.bonusMonths > 0" class="mt-4 p-3 bg-zinc-950 rounded-xl border border-formula-border font-bold text-center text-xs text-zinc-300">
+                                    Итого посещения: {{ selectedPlanDetails.months + selectedPlanDetails.bonusMonths }} месяцев
                                 </div>
                             </div>
                         </div>
 
-                        <!-- History -->
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col max-h-[500px]">
-                            <h3 class="text-lg font-bold text-slate-800 mb-4">История контактов</h3>
+                        <!-- History Notes -->
+                        <div class="bg-formula-card p-6 rounded-2xl border border-formula-border flex flex-col max-h-[450px]">
+                            <h3 class="text-sm font-black uppercase tracking-wider text-white mb-4">История контактов</h3>
                             
-                            <div class="flex-1 overflow-auto space-y-4 pr-2 mb-4">
-                                <div v-if="!activeClient.history || activeClient.history.length === 0" class="text-slate-400 text-sm text-center py-4">
-                                    Истории пока нет
+                            <div class="flex-1 overflow-auto space-y-3 pr-2 mb-4">
+                                <div v-if="!activeClient.history || activeClient.history.length === 0" class="text-formula-muted text-xs text-center py-4">
+                                    История пока пуста
                                 </div>
-                                <div v-for="(note, idx) in activeClient.history" :key="idx" class="border-l-2 border-blue-200 pl-3 py-1">
-                                    <div class="text-xs text-slate-400 mb-1">{{ formatDateAndTime(note.date) }}</div>
-                                    <div class="text-sm text-slate-700 whitespace-pre-wrap">{{ note.text }}</div>
+                                <div v-for="(note, idx) in activeClient.history" :key="idx" class="border-l-2 border-formula-yellow/50 pl-3 py-1">
+                                    <div class="text-[10px] text-formula-muted mb-0.5">{{ formatDateAndTime(note.date) }}</div>
+                                    <div class="text-xs text-zinc-200 whitespace-pre-wrap">{{ note.text }}</div>
                                 </div>
                             </div>
 
-                            <div class="border-t border-slate-100 pt-4 mt-auto">
-                                <textarea v-model="newNoteText" placeholder="Добавить заметку (например: трубку не взял, звонить завтра)" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm mb-2" rows="2"></textarea>
-                                <button @click="addNote" class="w-full bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium py-2 rounded-lg text-sm transition">
+                            <div class="border-t border-formula-border pt-4 mt-auto">
+                                <textarea v-model="newNoteText" placeholder="Новая заметка по звонку..." class="w-full px-3 py-2 bg-zinc-950 border border-formula-border rounded-xl focus:outline-none focus:border-formula-yellow text-xs text-white mb-2" rows="2"></textarea>
+                                <button @click="addNote" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-2 rounded-xl text-xs transition uppercase">
                                     Сохранить заметку
                                 </button>
                             </div>
@@ -326,149 +394,192 @@
 
             <!-- Settings View -->
             <div v-if="currentView === 'settings'" class="flex-1 overflow-auto p-8">
-                <h2 class="text-2xl font-bold text-slate-800 mb-6">Настройки абонементов и цен</h2>
+                <h2 class="text-2xl font-black text-white mb-6 uppercase tracking-wider">Настройки системы</h2>
                 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div v-for="(p, id) in settings.plans" :key="id" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                        <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">{{ p.name }}</h3>
+                <!-- Cloud Firebase Settings -->
+                <div class="bg-formula-card p-6 rounded-2xl border border-formula-border mb-8">
+                    <h3 class="text-lg font-bold text-white mb-2 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-formula-yellow"></span>
+                        Облачная синхронизация (Firebase)
+                    </h3>
+                    <p class="text-xs text-formula-muted mb-4">
+                        Вставьте сюда данные из вашего бесплатного консоли Firebase (Firestore), чтобы база синхронизировалась между компьютером и телефоном в реальном времени. Если поля пустые — данные сохраняются локально в браузере.
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-formula-muted mb-1">API Key</label>
+                            <input type="text" v-model="settings.firebaseConfig.apiKey" @change="saveData" class="w-full px-3 py-2 bg-zinc-950 border border-formula-border rounded-xl text-xs text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-formula-muted mb-1">Auth Domain</label>
+                            <input type="text" v-model="settings.firebaseConfig.authDomain" @change="saveData" class="w-full px-3 py-2 bg-zinc-950 border border-formula-border rounded-xl text-xs text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-formula-muted mb-1">Project ID</label>
+                            <input type="text" v-model="settings.firebaseConfig.projectId" @change="saveData" class="w-full px-3 py-2 bg-zinc-950 border border-formula-border rounded-xl text-xs text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-formula-muted mb-1">App ID</label>
+                            <input type="text" v-model="settings.firebaseConfig.appId" @change="saveData" class="w-full px-3 py-2 bg-zinc-950 border border-formula-border rounded-xl text-xs text-white">
+                        </div>
+                    </div>
+                    <button @click="initFirebase" class="mt-4 bg-formula-yellow text-formula-dark hover:bg-formula-yellowHover px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider">
+                        Переподключить облако
+                    </button>
+                </div>
+
+                <!-- Price Settings -->
+                <h3 class="text-lg font-bold text-white mb-4 uppercase tracking-wider">Цены и бонусы абонементов</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div v-for="(p, id) in settings.plans" :key="id" class="bg-formula-card p-6 rounded-2xl border border-formula-border">
+                        <h3 class="text-base font-black text-formula-yellow mb-4 border-b border-formula-border pb-2 uppercase">{{ p.name }}</h3>
                         
-                        <div class="space-y-4">
+                        <div class="space-y-4 text-xs">
                             <div>
-                                <label class="block text-sm text-slate-600 mb-1">Базовый срок (мес)</label>
-                                <input type="number" v-model.number="p.months" @change="saveData" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500">
+                                <label class="block text-formula-muted mb-1 font-bold">Базовый срок (мес)</label>
+                                <input type="number" v-model.number="p.months" @change="saveData" class="w-full px-3 py-2 bg-zinc-950 border border-formula-border rounded-xl text-white">
                             </div>
                             <div>
-                                <label class="block text-sm text-slate-600 mb-1">Обычная цена (₸)</label>
-                                <input type="number" v-model.number="p.regular" @change="saveData" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500">
+                                <label class="block text-formula-muted mb-1 font-bold">Обычная цена (₸)</label>
+                                <input type="number" v-model.number="p.regular" @change="saveData" class="w-full px-3 py-2 bg-zinc-950 border border-formula-border rounded-xl text-white">
                             </div>
                             <div>
-                                <label class="block text-sm text-slate-600 mb-1 font-medium">Цена со скидкой (₸)</label>
-                                <input type="number" v-model.number="p.discount" @change="saveData" class="w-full px-3 py-2 bg-green-50 border border-green-300 rounded focus:ring-2 focus:ring-green-500 font-bold text-green-700">
+                                <label class="block text-formula-muted mb-1 font-bold">Цена со скидкой (₸)</label>
+                                <input type="number" v-model.number="p.discount" @change="saveData" class="w-full px-3 py-2 bg-zinc-950 border border-formula-border rounded-xl font-bold text-formula-yellow">
                             </div>
                             
-                            <hr class="border-slate-100">
-                            <div class="font-medium text-sm text-slate-700">Настройка бонусов:</div>
+                            <hr class="border-formula-border">
+                            <div class="font-bold text-white">Бонусы:</div>
                             
                             <div>
-                                <label class="block text-sm text-slate-600 mb-1">Доп. месяцы в подарок</label>
-                                <input type="number" v-model.number="p.bonusMonths" @change="saveData" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded focus:ring-2 focus:ring-blue-500">
+                                <label class="block text-formula-muted mb-1">Доп. месяцы в подарок</label>
+                                <input type="number" v-model.number="p.bonusMonths" @change="saveData" class="w-full px-3 py-2 bg-zinc-950 border border-formula-border rounded-xl text-white">
                             </div>
-                            <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-                                <input type="checkbox" v-model="p.bonusBar" @change="saveData" class="rounded text-blue-600 w-4 h-4">
+                            <label class="flex items-center gap-2 text-zinc-300 cursor-pointer">
+                                <input type="checkbox" v-model="p.bonusBar" @change="saveData" class="accent-formula-yellow w-4 h-4">
                                 +1 месяц безлимитного бара
                             </label>
                         </div>
                     </div>
                 </div>
+
+                <!-- Template Settings -->
+                <h3 class="text-lg font-bold text-white mb-4 uppercase tracking-wider">Шаблон сообщения для клиентов (WhatsApp/Telegram)</h3>
+                <div class="bg-formula-card p-6 rounded-2xl border border-formula-border">
+                    <textarea v-model="settings.msgTemplate" @change="saveData" rows="6" class="w-full p-4 bg-zinc-950 border border-formula-border rounded-xl text-xs font-mono text-zinc-200 focus:outline-none focus:border-formula-yellow leading-relaxed"></textarea>
+                    <p class="text-[11px] text-formula-muted mt-2">Доступные теги: <code>{NAME}</code>, <code>{PLAN}</code>, <code>{REGULAR}</code>, <code>{PRICE}</code>, <code>{SAVINGS}</code>, <code>{TOTAL_MONTHS}</code></p>
+                </div>
             </div>
 
             <!-- Analytics View -->
             <div v-if="currentView === 'stats'" class="flex-1 overflow-auto p-8">
-                <h2 class="text-2xl font-bold text-slate-800 mb-6">Аналитика и конверсия</h2>
+                <h2 class="text-2xl font-black text-white mb-6 uppercase tracking-wider">Аналитика звонков</h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                        <div class="text-sm text-slate-500">Обзвонено (в работе)</div>
-                        <div class="text-2xl font-bold text-slate-800 mt-1">{{ analytics.called }}</div>
+                    <div class="bg-formula-card p-5 rounded-2xl border border-formula-border">
+                        <div class="text-xs text-formula-muted uppercase tracking-wider">Обзвонено клиентов</div>
+                        <div class="text-3xl font-black text-white mt-1">{{ analytics.called }}</div>
                     </div>
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                        <div class="text-sm text-slate-500">Конверсия в продажу</div>
-                        <div class="text-2xl font-bold text-blue-600 mt-1">{{ analytics.conversion }}%</div>
+                    <div class="bg-formula-card p-5 rounded-2xl border border-formula-border">
+                        <div class="text-xs text-formula-muted uppercase tracking-wider">Конверсия в продажу</div>
+                        <div class="text-3xl font-black text-formula-yellow mt-1">{{ analytics.conversion }}%</div>
                     </div>
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                        <div class="text-sm text-slate-500">Средний чек (из купивших)</div>
-                        <div class="text-2xl font-bold text-green-600 mt-1">{{ formatMoney(analytics.avgCheck) }}</div>
+                    <div class="bg-formula-card p-5 rounded-2xl border border-formula-border">
+                        <div class="text-xs text-formula-muted uppercase tracking-wider">Средний чек</div>
+                        <div class="text-3xl font-black text-emerald-400 mt-1">{{ formatMoney(analytics.avgCheck) }}</div>
                     </div>
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                        <div class="text-sm text-slate-500">Отказы / Не заинтересованы</div>
-                        <div class="text-2xl font-bold text-red-500 mt-1">{{ analytics.refused }}</div>
+                    <div class="bg-formula-card p-5 rounded-2xl border border-formula-border">
+                        <div class="text-xs text-formula-muted uppercase tracking-wider">Отказов</div>
+                        <div class="text-3xl font-black text-red-500 mt-1">{{ analytics.refused }}</div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                        <h3 class="font-bold text-slate-800 mb-4">Воронка продаж (По статусам)</h3>
+                    <div class="bg-formula-card p-6 rounded-2xl border border-formula-border">
+                        <h3 class="font-bold text-white mb-4 uppercase tracking-wider text-sm">Распределение по статусам</h3>
                         <div class="space-y-3">
                             <div v-for="(count, status) in analytics.statusBreakdown" :key="status" class="flex items-center justify-between">
-                                <span class="text-sm text-slate-600">{{ status }}</span>
-                                <div class="flex-1 mx-4 h-2 bg-slate-100 rounded overflow-hidden">
-                                    <div class="h-full bg-blue-500" :style="{ width: Math.max((count / Math.max(1, clients.length)) * 100, 2) + '%' }"></div>
+                                <span class="text-xs text-zinc-400 w-32 truncate">{{ status }}</span>
+                                <div class="flex-1 mx-4 h-2 bg-zinc-950 rounded-full overflow-hidden border border-formula-border">
+                                    <div class="h-full bg-formula-yellow" :style="{ width: Math.max((count / Math.max(1, clients.length)) * 100, 2) + '%' }"></div>
                                 </div>
-                                <span class="text-sm font-bold w-8 text-right">{{ count }}</span>
+                                <span class="text-xs font-mono font-bold text-white w-8 text-right">{{ count }}</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                        <h3 class="font-bold text-slate-800 mb-4">Продажи по абонементам (Куплено)</h3>
+                    <div class="bg-formula-card p-6 rounded-2xl border border-formula-border">
+                        <h3 class="font-bold text-white mb-4 uppercase tracking-wider text-sm">Продано абонементов</h3>
                         <div class="space-y-4">
-                            <div v-for="(count, planId) in analytics.planSales" :key="planId" class="flex justify-between items-center pb-2 border-b border-slate-100 last:border-0">
+                            <div v-for="(count, planId) in analytics.planSales" :key="planId" class="flex justify-between items-center pb-3 border-b border-formula-border last:border-0">
                                 <div>
-                                    <div class="font-medium text-slate-800">{{ getPlanName(planId) || 'Без абонемента' }}</div>
+                                    <div class="font-bold text-white text-sm">{{ getPlanName(planId) || 'Без указания' }}</div>
                                 </div>
-                                <div class="text-lg font-bold text-slate-800">{{ count }} шт.</div>
+                                <div class="text-xl font-black text-formula-yellow">{{ count }} шт.</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Add Client Modal -->
+            <!-- Quick Add Modal -->
             <Transition name="fade">
-                <div v-if="showAddModal" class="absolute inset-0 bg-slate-900 bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-                        <div class="p-5 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                            <h2 class="text-xl font-bold text-slate-800">Быстрое добавление</h2>
-                            <button @click="closeQuickAdd" class="text-slate-400 hover:text-slate-700">
+                <div v-if="showAddModal" class="absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div class="bg-formula-card border border-formula-border rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+                        <div class="p-5 border-b border-formula-border bg-zinc-950 flex justify-between items-center">
+                            <h2 class="text-lg font-black text-white uppercase tracking-wider flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-formula-yellow"></span>
+                                Быстрое добавление
+                            </h2>
+                            <button @click="closeQuickAdd" class="text-formula-muted hover:text-white">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
                         </div>
                         
                         <div class="p-6 overflow-y-auto flex-1 space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Имя <span class="text-red-500">*</span></label>
-                                <input type="text" v-model="form.name" ref="addNameInput" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <label class="block text-xs font-bold text-formula-muted uppercase tracking-wider mb-1">Имя <span class="text-formula-yellow">*</span></label>
+                                <input type="text" v-model="form.name" ref="addNameInput" class="w-full px-4 py-2.5 bg-zinc-950 border border-formula-border rounded-xl focus:outline-none focus:border-formula-yellow text-white">
                             </div>
                             
                             <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Телефон <span class="text-red-500">*</span></label>
-                                <input type="text" v-model="form.phone" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="+7 ...">
+                                <label class="block text-xs font-bold text-formula-muted uppercase tracking-wider mb-1">Телефон <span class="text-formula-yellow">*</span></label>
+                                <input type="text" v-model="form.phone" class="w-full px-4 py-2.5 bg-zinc-950 border border-formula-border rounded-xl focus:outline-none focus:border-formula-yellow text-white font-mono" placeholder="+7...">
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Статус <span class="text-red-500">*</span></label>
-                                <select v-model="form.status" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                                <label class="block text-xs font-bold text-formula-muted uppercase tracking-wider mb-1">Статус <span class="text-formula-yellow">*</span></label>
+                                <select v-model="form.status" class="w-full px-4 py-2.5 bg-zinc-950 border border-formula-border rounded-xl focus:outline-none focus:border-formula-yellow text-white font-bold">
                                     <option v-for="s in settings.statuses" :value="s">{{s}}</option>
                                 </select>
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Абонемент (Интерес)</label>
-                                    <select v-model="form.planId" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <label class="block text-xs font-bold text-formula-muted uppercase tracking-wider mb-1">Абонемент</label>
+                                    <select v-model="form.planId" class="w-full px-4 py-2.5 bg-zinc-950 border border-formula-border rounded-xl focus:outline-none focus:border-formula-yellow text-xs text-white">
                                         <option value="">Не выбрано</option>
                                         <option v-for="(p, id) in settings.plans" :value="id">{{p.name}}</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Перезвонить</label>
-                                    <input type="date" v-model="form.recallDate" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <label class="block text-xs font-bold text-formula-muted uppercase tracking-wider mb-1">Перезвонить</label>
+                                    <input type="date" v-model="form.recallDate" class="w-full px-4 py-2.5 bg-zinc-950 border border-formula-border rounded-xl focus:outline-none focus:border-formula-yellow text-xs text-white">
                                 </div>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Комментарий (сразу в историю)</label>
-                                <input type="text" v-model="form.comment" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Краткая заметка">
+                                <label class="block text-xs font-bold text-formula-muted uppercase tracking-wider mb-1">Краткая заметка</label>
+                                <input type="text" v-model="form.comment" class="w-full px-4 py-2.5 bg-zinc-950 border border-formula-border rounded-xl focus:outline-none focus:border-formula-yellow text-white text-xs" placeholder="Например: Спросить про скидку">
                             </div>
                         </div>
 
-                        <div class="p-5 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row gap-3">
-                            <button @click="saveClient(false)" :disabled="!isFormValid" class="flex-1 bg-slate-800 text-white hover:bg-slate-900 py-3 rounded-lg font-medium transition disabled:opacity-50">
+                        <div class="p-5 border-t border-formula-border bg-zinc-950 flex flex-col sm:flex-row gap-3">
+                            <button @click="saveClient(false)" :disabled="!isFormValid" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition disabled:opacity-50">
                                 Сохранить
                             </button>
-                            <button @click="saveClient(true)" :disabled="!isFormValid" class="flex-1 bg-blue-600 text-white hover:bg-blue-700 py-3 rounded-lg font-medium transition disabled:opacity-50 flex items-center justify-center gap-2">
-                                Сохранить и Следующий 
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            <button @click="saveClient(true)" :disabled="!isFormValid" class="flex-1 bg-formula-yellow hover:bg-formula-yellowHover text-formula-dark py-3 rounded-xl font-black text-xs uppercase tracking-wider transition disabled:opacity-50 flex items-center justify-center gap-1 shadow-[0_0_10px_rgba(250,204,21,0.2)]">
+                                Сохранить и Следующий →
                             </button>
                         </div>
                     </div>
@@ -481,7 +592,6 @@
     <script>
         const { createApp } = Vue;
 
-        // Default Data Models
         const DEFAULT_PLANS = {
             "3_months": { name: "3 месяца", regular: 59000, discount: 45000, months: 3, bonusMonths: 0, bonusBar: true },
             "6_months": { name: "6 месяцев", regular: 100000, discount: 70000, months: 6, bonusMonths: 0, bonusBar: true },
@@ -493,32 +603,39 @@
             "Не отвечает", "Не заинтересован", "Купил", "Отказался", "Не сейчас"
         ];
 
+        const DEFAULT_MSG_TEMPLATE = `🏋️‍♂️ Фитнес-клуб FORMULA\nЗдравствуйте, {NAME}!\n\nСпециальное предложение по абонементу {PLAN}:\n~{REGULAR}~ ➔ {PRICE}\nВаша экономия: {SAVINGS}\n\n🎁 Ваши бонусы:\n+1 месяц безлимитного фитнес-бара\n+ Бонусные месяцы к посещению ({TOTAL_MONTHS} месяцев всего)\n\nКогда вам удобно прийти на первую бесплатную тренировку?`;
+
         createApp({
             data() {
                 return {
                     currentView: 'dashboard',
                     clients: [],
+                    isCloudActive: false,
+                    db: null,
+                    
                     settings: {
                         plans: JSON.parse(JSON.stringify(DEFAULT_PLANS)),
-                        statuses: DEFAULT_STATUSES
+                        statuses: DEFAULT_STATUSES,
+                        msgTemplate: DEFAULT_MSG_TEMPLATE,
+                        firebaseConfig: {
+                            apiKey: 'AIzaSyCuOCMSW9YLO5mfKE7NfrPqlXp7Tfhl3wg',
+                            authDomain: 'formula-crm-7746d.firebaseapp.com',
+                            projectId: 'formula-crm-7746d',
+                            appId: '1:1040638285469:web:b7ceb3027c52909df22674'
+                        }
                     },
                     
                     showAddModal: false,
                     form: this.getEmptyForm(),
-                    
                     activeClient: null,
                     newNoteText: '',
                     
-                    filters: {
-                        search: '',
-                        status: '',
-                        plan: '',
-                        recallToday: false
-                    }
+                    filters: { search: '', status: '', plan: '', recallToday: false }
                 }
             },
             created() {
-                this.loadData();
+                this.loadSettings();
+                this.initFirebase();
             },
             computed: {
                 isFormValid() {
@@ -530,23 +647,16 @@
                 },
                 filteredClients() {
                     let result = this.clients;
-                    
                     if (this.filters.search) {
                         const s = this.filters.search.toLowerCase();
                         result = result.filter(c => c.name.toLowerCase().includes(s) || c.phone.includes(s));
                     }
-                    if (this.filters.status) {
-                        result = result.filter(c => c.status === this.filters.status);
-                    }
-                    if (this.filters.plan) {
-                        result = result.filter(c => c.planId === this.filters.plan);
-                    }
+                    if (this.filters.status) result = result.filter(c => c.status === this.filters.status);
+                    if (this.filters.plan) result = result.filter(c => c.planId === this.filters.plan);
                     if (this.filters.recallToday) {
                         const todayStr = new Date().toISOString().split('T')[0];
                         result = result.filter(c => c.recallDate === todayStr);
                     }
-                    
-                    // Sort: recall today first, then newest
                     return result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                 },
                 clientsToRecallToday() {
@@ -554,95 +664,108 @@
                     return this.clients.filter(c => c.recallDate === todayStr && c.status !== 'Купил' && c.status !== 'Отказался');
                 },
                 stats() {
-                    let potentialSum = 0;
-                    let actualSum = 0;
-                    let soldCount = 0;
-                    let salesToday = 0;
-                    let salesThisMonth = 0;
-                    
+                    let potentialSum = 0, actualSum = 0, soldCount = 0, salesToday = 0, salesThisMonth = 0;
                     const todayStr = new Date().toISOString().split('T')[0];
-                    const currentMonth = todayStr.substring(0, 7); // YYYY-MM
+                    const currentMonth = todayStr.substring(0, 7);
 
                     this.clients.forEach(c => {
-                        // Фактические продажи
                         if (c.status === 'Купил' && c.actualSaleAmount) {
                             actualSum += c.actualSaleAmount;
                             soldCount++;
-                            
                             if (c.saleDate) {
                                 const sDate = c.saleDate.split('T')[0];
                                 if (sDate === todayStr) salesToday += c.actualSaleAmount;
                                 if (sDate.startsWith(currentMonth)) salesThisMonth += c.actualSaleAmount;
                             }
-                        } 
-                        // Потенциальная сумма (Если не купил, не отказался и выбран абонемент)
-                        else if (c.status !== 'Отказался' && c.status !== 'Не заинтересован' && c.planId) {
+                        } else if (c.status !== 'Отказался' && c.status !== 'Не заинтересован' && c.planId) {
                             const plan = this.settings.plans[c.planId];
                             if (plan) potentialSum += plan.discount;
                         }
                     });
 
-                    return {
-                        needRecallCount: this.clientsToRecallToday.length,
-                        potentialSum, actualSum, soldCount, salesToday, salesThisMonth
-                    };
+                    return { needRecallCount: this.clientsToRecallToday.length, potentialSum, actualSum, soldCount, salesToday, salesThisMonth };
                 },
                 analytics() {
                     const statusBreakdown = {};
                     this.settings.statuses.forEach(s => statusBreakdown[s] = 0);
-                    
                     const planSales = {};
                     Object.keys(this.settings.plans).forEach(p => planSales[p] = 0);
 
-                    let called = 0;
-                    let refused = 0;
-                    let bought = 0;
-
+                    let called = 0, refused = 0, bought = 0;
                     this.clients.forEach(c => {
                         if (statusBreakdown[c.status] !== undefined) statusBreakdown[c.status]++;
-                        
                         if (c.status !== 'Новый') called++;
                         if (c.status === 'Отказался' || c.status === 'Не заинтересован') refused++;
                         if (c.status === 'Купил') {
                             bought++;
-                            if (c.planId) {
-                                planSales[c.planId] = (planSales[c.planId] || 0) + 1;
-                            }
+                            if (c.planId) planSales[c.planId] = (planSales[c.planId] || 0) + 1;
                         }
                     });
 
                     const conversion = called > 0 ? Math.round((bought / called) * 100) : 0;
                     const avgCheck = bought > 0 ? Math.round(this.stats.actualSum / bought) : 0;
-
                     return { called, refused, bought, conversion, avgCheck, statusBreakdown, planSales };
                 }
             },
             methods: {
-                loadData() {
-                    const savedClients = localStorage.getItem('formula_clients');
-                    if (savedClients) this.clients = JSON.parse(savedClients);
-                    
-                    const savedSettings = localStorage.getItem('formula_settings');
-                    if (savedSettings) this.settings = JSON.parse(savedSettings);
+                loadSettings() {
+                    const savedSettings = localStorage.getItem('formula_settings_v2');
+                    if (savedSettings) this.settings = Object.assign(this.settings, JSON.parse(savedSettings));
                 },
                 saveData() {
-                    localStorage.setItem('formula_clients', JSON.stringify(this.clients));
-                    localStorage.setItem('formula_settings', JSON.stringify(this.settings));
+                    localStorage.setItem('formula_settings_v2', JSON.stringify(this.settings));
+                    if (!this.isCloudActive) {
+                        localStorage.setItem('formula_clients_v2', JSON.stringify(this.clients));
+                    }
+                },
+                initFirebase() {
+                    const cfg = this.settings.firebaseConfig;
+                    if (cfg && cfg.apiKey && cfg.projectId) {
+                        try {
+                            if (!firebase.apps.length) {
+                                firebase.initializeApp(cfg);
+                            }
+                            this.db = firebase.firestore();
+                            this.isCloudActive = true;
+                            
+                            // Realtime Sync from Firestore
+                            this.db.collection("clients").onSnapshot((snapshot) => {
+                                const list = [];
+                                snapshot.forEach((doc) => {
+                                    list.push({ id: doc.id, ...doc.data() });
+                                });
+                                this.clients = list;
+                            });
+                        } catch (e) {
+                            console.error("Firebase init failed:", e);
+                            this.isCloudActive = false;
+                            this.loadLocalClients();
+                        }
+                    } else {
+                        this.isCloudActive = false;
+                        this.loadLocalClients();
+                    }
+                },
+                loadLocalClients() {
+                    const saved = localStorage.getItem('formula_clients_v2');
+                    if (saved) this.clients = JSON.parse(saved);
+                },
+                syncClientToCloud(client) {
+                    if (this.isCloudActive && this.db) {
+                        this.db.collection("clients").doc(client.id).set(client);
+                    } else {
+                        this.saveData();
+                    }
                 },
                 getEmptyForm() {
-                    return {
-                        name: '', phone: '', status: 'Новый', planId: '', 
-                        recallDate: '', comment: ''
-                    };
+                    return { name: '', phone: '', status: 'Новый', planId: '', recallDate: '', comment: '' };
                 },
                 openQuickAdd() {
                     this.form = this.getEmptyForm();
                     this.showAddModal = true;
                     setTimeout(() => this.$refs.addNameInput && this.$refs.addNameInput.focus(), 100);
                 },
-                closeQuickAdd() {
-                    this.showAddModal = false;
-                },
+                closeQuickAdd() { this.showAddModal = false; },
                 saveClient(addNext = false) {
                     if (!this.isFormValid) return;
 
@@ -661,26 +784,23 @@
                         saleDate: null
                     };
 
-                    // Auto-record initial note
-                    let initNote = `Добавлен в базу. Статус: ${this.form.status}.`;
-                    if (this.form.comment) initNote += ` Комментарий: ${this.form.comment}`;
+                    let initNote = `Первичный контакт. Статус: ${this.form.status}.`;
+                    if (this.form.comment) initNote += ` Коммент: ${this.form.comment}`;
                     newClient.history.push({ date: new Date().toISOString(), text: initNote });
 
-                    // Handle if status is immediately 'Купил'
                     if (newClient.status === 'Купил' && newClient.planId) {
                         newClient.actualSaleAmount = this.settings.plans[newClient.planId].discount;
                         newClient.saleDate = new Date().toISOString();
                     }
 
-                    this.clients.push(newClient);
-                    this.saveData();
+                    if (!this.isCloudActive) this.clients.push(newClient);
+                    this.syncClientToCloud(newClient);
 
                     if (addNext) {
                         this.form = this.getEmptyForm();
                         setTimeout(() => this.$refs.addNameInput && this.$refs.addNameInput.focus(), 100);
                     } else {
                         this.closeQuickAdd();
-                        // if we were not on dashboard or clients, go to clients
                         if (this.currentView !== 'dashboard') this.currentView = 'clients';
                     }
                 },
@@ -689,88 +809,83 @@
                     this.currentView = 'client-detail';
                 },
                 deleteClient(id) {
-                    if(confirm('Точно удалить этого клиента? Действие необратимо.')){
-                        this.clients = this.clients.filter(c => c.id !== id);
-                        this.saveData();
+                    if (confirm('Удалить клиента из базы?')) {
+                        if (this.isCloudActive && this.db) {
+                            this.db.collection("clients").doc(id).delete();
+                        } else {
+                            this.clients = this.clients.filter(c => c.id !== id);
+                            this.saveData();
+                        }
                         this.currentView = 'clients';
                         this.activeClient = null;
                     }
                 },
                 handleStatusChange() {
                     const c = this.activeClient;
-                    c.history.push({
-                        date: new Date().toISOString(),
-                        text: `Статус изменён на: ${c.status}`
-                    });
+                    c.history.push({ date: new Date().toISOString(), text: `Статус изменён: ${c.status}` });
 
-                    // Logic for actual sales
                     if (c.status === 'Купил') {
                         if (c.planId) {
                             c.actualSaleAmount = this.settings.plans[c.planId].discount;
-                            c.saleDate = new Date().toISOString(); // Now
-                            c.history.push({ date: new Date().toISOString(), text: `Оформлена продажа на сумму ${this.formatMoney(c.actualSaleAmount)}`});
-                        } else {
-                            alert('Внимание: Абонемент не выбран. Сумма продажи = 0.');
+                            c.saleDate = new Date().toISOString();
+                            c.history.push({ date: new Date().toISOString(), text: `Подтверждена продажа: ${this.formatMoney(c.actualSaleAmount)}` });
                         }
-                    } else {
-                        // If changed back from bought to something else
-                        if (c.actualSaleAmount > 0) {
-                            c.actualSaleAmount = 0;
-                            c.saleDate = null;
-                            c.history.push({ date: new Date().toISOString(), text: `Отмена фактической продажи (возврат статуса)`});
-                        }
+                    } else if (c.actualSaleAmount > 0) {
+                        c.actualSaleAmount = 0;
+                        c.saleDate = null;
                     }
-                    this.saveData();
+                    this.syncClientToCloud(c);
                 },
                 addNote() {
                     if (!this.newNoteText.trim()) return;
-                    this.activeClient.history.push({
-                        date: new Date().toISOString(),
-                        text: this.newNoteText.trim()
-                    });
+                    this.activeClient.history.push({ date: new Date().toISOString(), text: this.newNoteText.trim() });
                     this.newNoteText = '';
-                    this.saveData();
+                    this.syncClientToCloud(this.activeClient);
                 },
-                
-                // Helpers
-                getPlanName(id) {
-                    return id && this.settings.plans[id] ? this.settings.plans[id].name : '';
+                openMessenger(phone, type) {
+                    const cleanPhone = phone.replace(/[^0-9]/g, '');
+                    let url = '';
+                    if (type === 'whatsapp') url = `https://wa.me/${cleanPhone}`;
+                    if (type === 'telegram') url = `https://t.me/+${cleanPhone}`;
+                    window.open(url, '_blank');
                 },
-                formatMoney(value) {
-                    if (!value) return '0 ₸';
-                    return new Intl.NumberFormat('ru-RU').format(value) + ' ₸';
+                copyProposal() {
+                    if (!this.activeClient || !this.activeClient.planId) {
+                        alert('Сначала выберите абонемент в карточке клиента!');
+                        return;
+                    }
+                    const p = this.settings.plans[this.activeClient.planId];
+                    let text = this.settings.msgTemplate
+                        .replace('{NAME}', this.activeClient.name)
+                        .replace('{PLAN}', p.name)
+                        .replace('{REGULAR}', this.formatMoney(p.regular))
+                        .replace('{PRICE}', this.formatMoney(p.discount))
+                        .replace('{SAVINGS}', this.formatMoney(p.regular - p.discount))
+                        .replace('{TOTAL_MONTHS}', p.months + p.bonusMonths);
+
+                    navigator.clipboard.writeText(text).then(() => {
+                        alert('КП скопировано в буфер обмена! Вставьте в WhatsApp.');
+                    });
                 },
-                formatDate(dateStr) {
-                    if (!dateStr) return '';
-                    const d = new Date(dateStr);
-                    return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                },
-                formatDateAndTime(dateStr) {
-                    if (!dateStr) return '';
-                    const d = new Date(dateStr);
-                    return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-                },
-                isToday(dateStr) {
-                    if (!dateStr) return false;
-                    return dateStr === new Date().toISOString().split('T')[0];
-                },
-                isPast(dateStr) {
-                    if (!dateStr) return false;
-                    return dateStr < new Date().toISOString().split('T')[0];
-                },
-                getStatusColor(status) {
-                    const colors = {
-                        'Новый': 'bg-blue-100 text-blue-800',
-                        'Позвонил': 'bg-purple-100 text-purple-800',
-                        'Перезвонить позже': 'bg-orange-100 text-orange-800',
-                        'Думает': 'bg-yellow-100 text-yellow-800',
-                        'Не отвечает': 'bg-slate-200 text-slate-800',
-                        'Не заинтересован': 'bg-red-100 text-red-800',
-                        'Купил': 'bg-green-100 text-green-800',
-                        'Отказался': 'bg-red-200 text-red-900',
-                        'Не сейчас': 'bg-slate-300 text-slate-800'
+                getPlanName(id) { return id && this.settings.plans[id] ? this.settings.plans[id].name : ''; },
+                formatMoney(v) { return (v || 0).toLocaleString('ru-RU') + ' ₸'; },
+                formatDate(d) { return d ? new Date(d).toLocaleDateString('ru-RU') : ''; },
+                formatDateAndTime(d) { return d ? new Date(d).toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }) : ''; },
+                isToday(d) { return d === new Date().toISOString().split('T')[0]; },
+                isPast(d) { return d < new Date().toISOString().split('T')[0]; },
+                getStatusStyle(s) {
+                    const styles = {
+                        'Новый': 'bg-sky-500/20 text-sky-400 border border-sky-500/30',
+                        'Позвонил': 'bg-purple-500/20 text-purple-400 border border-purple-500/30',
+                        'Перезвонить позже': 'bg-formula-yellow/20 text-formula-yellow border border-formula-yellow/30',
+                        'Думает': 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
+                        'Не отвечает': 'bg-zinc-800 text-zinc-400 border border-zinc-700',
+                        'Не заинтересован': 'bg-red-500/10 text-red-400 border border-red-500/20',
+                        'Купил': 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
+                        'Отказался': 'bg-red-500/20 text-red-500 border border-red-500/30',
+                        'Не сейчас': 'bg-zinc-800 text-zinc-300 border border-zinc-700'
                     };
-                    return colors[status] || 'bg-slate-100 text-slate-800';
+                    return styles[s] || 'bg-zinc-800 text-zinc-300';
                 }
             }
         }).mount('#app');
